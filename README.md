@@ -12,6 +12,11 @@ A modern, professional redirect management system built with Firebase and Netlif
 - 🚀 **Fast API** - Cached JSON endpoint for third-party integration
 - 📈 **SEO Optimized** - Rich metadata for better search visibility
 
+## Live Demo
+
+**Admin Panel**: https://seo-redirects.netlify.app
+**API Endpoint**: https://seo-redirects.netlify.app/redirects.json
+
 ## Third Party Website Integration
 
 **To update your third party website URL:**
@@ -26,13 +31,13 @@ Your redirects will then be accessible at: `https://yourthirdpartywebsite.com/sl
 
 ### Endpoint
 ```
-https://yourdomain.com/redirects.json
+https://seo-redirects.netlify.app/redirects.json
 ```
 
 ### JavaScript (Browser)
 ```javascript
 // Fetch all redirects
-fetch('https://yourdomain.com/redirects.json')
+fetch('https://seo-redirects.netlify.app/redirects.json')
   .then(response => response.json())
   .then(data => {
     console.log('Redirects:', data);
@@ -42,7 +47,7 @@ fetch('https://yourdomain.com/redirects.json')
 
 // Get specific redirect and redirect user
 const slug = 'my-post';
-fetch('https://yourdomain.com/redirects.json')
+fetch('https://seo-redirects.netlify.app/redirects.json')
   .then(response => response.json())
   .then(data => {
     const redirect = data[slug];
@@ -60,7 +65,7 @@ fetch('https://yourdomain.com/redirects.json')
 const https = require('https');
 
 // Using built-in https module
-https.get('https://yourdomain.com/redirects.json', (res) => {
+https.get('https://seo-redirects.netlify.app/redirects.json', (res) => {
   let data = '';
   res.on('data', chunk => data += chunk);
   res.on('end', () => {
@@ -70,7 +75,7 @@ https.get('https://yourdomain.com/redirects.json', (res) => {
 });
 
 // Using fetch (Node.js 18+)
-const response = await fetch('https://yourdomain.com/redirects.json');
+const response = await fetch('https://seo-redirects.netlify.app/redirects.json');
 const redirects = await response.json();
 console.log('Redirects:', redirects);
 ```
@@ -80,7 +85,7 @@ console.log('Redirects:', redirects);
 // pages/api/redirects.js
 export default async function handler(req, res) {
   try {
-    const response = await fetch('https://yourdomain.com/redirects.json');
+    const response = await fetch('https://seo-redirects.netlify.app/redirects.json');
     const redirects = await response.json();
     res.status(200).json(redirects);
   } catch (error) {
@@ -142,7 +147,7 @@ export default function RedirectPage() {
 ```php
 <?php
 // Fetch all redirects
-$json = file_get_contents('https://yourdomain.com/redirects.json');
+$json = file_get_contents('https://seo-redirects.netlify.app/redirects.json');
 $redirects = json_decode($json, true);
 
 // Get specific redirect from URL parameter
@@ -175,7 +180,7 @@ app = Flask(__name__)
 @app.route('/<slug>')
 def handle_redirect(slug):
     try:
-        response = requests.get('https://yourdomain.com/redirects.json')
+        response = requests.get('https://seo-redirects.netlify.app/redirects.json')
         redirects = response.json()
         
         if slug in redirects:
@@ -193,14 +198,14 @@ if __name__ == '__main__':
 ### cURL
 ```bash
 # Fetch all redirects
-curl -X GET "https://yourdomain.com/redirects.json" \
+curl -X GET "https://seo-redirects.netlify.app/redirects.json" \
      -H "Accept: application/json"
 
 # Pretty print JSON
-curl -s "https://yourdomain.com/redirects.json" | jq '.'
+curl -s "https://seo-redirects.netlify.app/redirects.json" | jq '.'
 
 # Get specific redirect URL
-curl -s "https://yourdomain.com/redirects.json" | \
+curl -s "https://seo-redirects.netlify.app/redirects.json" | \
   jq -r '.["my-post"].url'
 ```
 
@@ -258,7 +263,7 @@ The system supports various content types:
    - Set build command: `npm run build`
    - Set publish directory: `dist`
 4. **Update your domain**:
-   - Replace `yourdomain.com` with your actual domain
+   - Replace `seo-redirects.netlify.app` with your actual domain
    - Update third-party website URL in the admin panel
 
 ## Firestore Rules
