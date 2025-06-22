@@ -15,7 +15,7 @@ A modern, professional redirect management system built with Firebase and Netlif
 ## Live Demo
 
 **Admin Panel**: https://seo-redirects.netlify.app
-**API Endpoint**: https://seo-redirects.netlify.app/redirects.json
+**API Endpoint**: https://seo-redirects.netlify.app/api/redirects.json
 
 ## Third Party Website Integration
 
@@ -31,13 +31,13 @@ Your redirects will then be accessible at: `https://yourthirdpartywebsite.com/sl
 
 ### Endpoint
 ```
-https://seo-redirects.netlify.app/redirects.json
+https://seo-redirects.netlify.app/api/redirects.json
 ```
 
 ### JavaScript (Browser)
 ```javascript
 // Fetch all redirects
-fetch('https://seo-redirects.netlify.app/redirects.json')
+fetch('https://seo-redirects.netlify.app/api/redirects.json')
   .then(response => response.json())
   .then(data => {
     console.log('Redirects:', data);
@@ -47,7 +47,7 @@ fetch('https://seo-redirects.netlify.app/redirects.json')
 
 // Get specific redirect and redirect user
 const slug = 'my-post';
-fetch('https://seo-redirects.netlify.app/redirects.json')
+fetch('https://seo-redirects.netlify.app/api/redirects.json')
   .then(response => response.json())
   .then(data => {
     const redirect = data[slug];
@@ -65,7 +65,7 @@ fetch('https://seo-redirects.netlify.app/redirects.json')
 const https = require('https');
 
 // Using built-in https module
-https.get('https://seo-redirects.netlify.app/redirects.json', (res) => {
+https.get('https://seo-redirects.netlify.app/api/redirects.json', (res) => {
   let data = '';
   res.on('data', chunk => data += chunk);
   res.on('end', () => {
@@ -75,7 +75,7 @@ https.get('https://seo-redirects.netlify.app/redirects.json', (res) => {
 });
 
 // Using fetch (Node.js 18+)
-const response = await fetch('https://seo-redirects.netlify.app/redirects.json');
+const response = await fetch('https://seo-redirects.netlify.app/api/redirects.json');
 const redirects = await response.json();
 console.log('Redirects:', redirects);
 ```
@@ -85,7 +85,7 @@ console.log('Redirects:', redirects);
 // pages/api/redirects.js
 export default async function handler(req, res) {
   try {
-    const response = await fetch('https://seo-redirects.netlify.app/redirects.json');
+    const response = await fetch('https://seo-redirects.netlify.app/api/redirects.json');
     const redirects = await response.json();
     res.status(200).json(redirects);
   } catch (error) {
@@ -147,7 +147,7 @@ export default function RedirectPage() {
 ```php
 <?php
 // Fetch all redirects
-$json = file_get_contents('https://seo-redirects.netlify.app/redirects.json');
+$json = file_get_contents('https://seo-redirects.netlify.app/api/redirects.json');
 $redirects = json_decode($json, true);
 
 // Get specific redirect from URL parameter
@@ -180,7 +180,7 @@ app = Flask(__name__)
 @app.route('/<slug>')
 def handle_redirect(slug):
     try:
-        response = requests.get('https://seo-redirects.netlify.app/redirects.json')
+        response = requests.get('https://seo-redirects.netlify.app/api/redirects.json')
         redirects = response.json()
         
         if slug in redirects:
@@ -198,14 +198,14 @@ if __name__ == '__main__':
 ### cURL
 ```bash
 # Fetch all redirects
-curl -X GET "https://seo-redirects.netlify.app/redirects.json" \
+curl -X GET "https://seo-redirects.netlify.app/api/redirects.json" \
      -H "Accept: application/json"
 
 # Pretty print JSON
-curl -s "https://seo-redirects.netlify.app/redirects.json" | jq '.'
+curl -s "https://seo-redirects.netlify.app/api/redirects.json" | jq '.'
 
 # Get specific redirect URL
-curl -s "https://seo-redirects.netlify.app/redirects.json" | \
+curl -s "https://seo-redirects.netlify.app/api/redirects.json" | \
   jq -r '.["my-post"].url'
 ```
 
@@ -245,7 +245,7 @@ The system supports various content types:
 ## Firebase Quota & Analytics
 
 - **Free Tier Limit**: 50,000 document reads per day
-- **API Call Tracking**: Each request to `/redirects.json` counts as one read per redirect
+- **API Call Tracking**: Each request to `/api/redirects.json` counts as one read per redirect
 - **Analytics Dashboard**: Monitor your usage in real-time
 - **Optimization Tips**: 
   - Cache responses on your third-party website
