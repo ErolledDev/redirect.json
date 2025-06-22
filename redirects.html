@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirects JSON</title>
+    <style>
+        body {
+            font-family: Monaco, Menlo, monospace;
+            padding: 2rem;
+            background: #f8f9fa;
+            margin: 0;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 1.5rem;
+        }
+        .header p {
+            margin: 0.5rem 0 0 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Redirects JSON API</h1>
+        <p>Public endpoint for redirect data</p>
+    </div>
+    <pre id="json-output">Loading redirects...</pre>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCeBHo-IftrpVSWUqJ7PJu6_42CA45Y0is",
+            authDomain: "seo-redirect-system.firebaseapp.com",
+            projectId: "seo-redirect-system",
+            storageBucket: "seo-redirect-system.firebasestorage.app",
+            messagingSenderId: "998159604073",
+            appId: "1:998159604073:web:c8ba0835584a40944fc5f8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function loadRedirects() {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'redirects'));
+                const redirects = {};
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const redirect = {
+                        title: data.title || '',
+                        desc: data.desc || '',
+                        url: data.url || '',
+                        image: data.image || '',
+                        video: data.video || '',
+                        keywords: data.keywords || '',
+                        site_name: data.site_name || '',
+                        type: data.type || 'article',
+                        created_at: data.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
+                        updated_at: data.updated_at?.toDate?.()?.toISOString() || new Date().toISOString()
+                    };
+                    redirects[data.slug] = redirect;
+                });
+                
+                document.getElementById('json-output').textContent = JSON.stringify(redirects, null, 2);
+                
+            } catch (error) {
+                document.getElementById('json-output').textContent = `Error loading redirects: ${error.message}\n\nMake sure your Firestore rules allow public read access to the redirects collection.`;
+            }
+        }
+
+        loadRedirects();
+    </script>
+</body>
+</html>

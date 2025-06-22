@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirect Manager</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Auth Section -->
+    <div id="auth-section" class="auth-container">
+      <div class="auth-card">
+        <h1>Redirect Manager</h1>
+        <p>Sign in to manage your redirects</p>
+        
+        <form id="auth-form" class="auth-form">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" required />
+          </div>
+          
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" required />
+          </div>
+          
+          <div class="auth-buttons">
+            <button type="submit" id="signin-btn" class="btn btn-primary">Sign In</button>
+            <button type="button" id="signup-btn" class="btn btn-secondary">Sign Up</button>
+          </div>
+        </form>
+        
+        <div id="auth-error" class="error-message"></div>
+      </div>
+    </div>
+
+    <!-- Main App Section -->
+    <div id="app-section" class="app-container" style="display: none;">
+      <header class="app-header">
+        <h1>Redirect Manager</h1>
+        <div class="header-actions">
+          <span id="user-email" class="user-info"></span>
+          <button id="signout-btn" class="btn btn-outline">Sign Out</button>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <!-- Create Redirect Form -->
+        <section class="form-section">
+          <h2>Create New Redirect</h2>
+          <form id="redirect-form" class="redirect-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="slug">Slug (URL path)</label>
+                <input type="text" id="slug" placeholder="e.g., my-awesome-post" required />
+                <small>Will be used as: yourdomain.com/slug</small>
+              </div>
+              
+              <div class="form-group">
+                <label for="url">Redirect URL</label>
+                <input type="url" id="url" placeholder="https://example.com" required />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" id="title" placeholder="Page title for SEO" required />
+              </div>
+              
+              <div class="form-group">
+                <label for="site_name">Site Name</label>
+                <input type="text" id="site_name" placeholder="Your Site Name" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="desc">Description</label>
+              <textarea id="desc" placeholder="SEO description" rows="3"></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="image">Image URL</label>
+                <input type="url" id="image" placeholder="https://example.com/image.jpg" />
+              </div>
+              
+              <div class="form-group">
+                <label for="video">Video URL</label>
+                <input type="url" id="video" placeholder="https://youtube.com/watch?v=..." />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="keywords">Keywords</label>
+                <input type="text" id="keywords" placeholder="keyword1, keyword2, keyword3" />
+              </div>
+              
+              <div class="form-group">
+                <label for="type">Content Type</label>
+                <select id="type">
+                  <option value="article">Article</option>
+                  <option value="website">Website</option>
+                  <option value="video">Video</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-large">Create Redirect</button>
+          </form>
+        </section>
+
+        <!-- Redirects List -->
+        <section class="list-section">
+          <div class="section-header">
+            <h2>Your Redirects</h2>
+            <div class="list-actions">
+              <button id="refresh-btn" class="btn btn-outline">Refresh</button>
+              <a href="/redirects.json" target="_blank" class="btn btn-outline">View JSON</a>
+            </div>
+          </div>
+          
+          <div id="redirects-list" class="redirects-list">
+            <div class="loading">Loading redirects...</div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
