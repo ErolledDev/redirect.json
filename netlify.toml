@@ -1,0 +1,22 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/redirects.json"
+  to = "/.netlify/functions/redirects"
+  status = 200
+
+[[redirects]]
+  from = "/api/redirects.json"
+  to = "/.netlify/functions/redirects"
+  status = 200
+
+# Fallback for SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -1,0 +1,3 @@
+# Netlify redirects file
+/redirects.json /api/redirects.json 200
+/api/redirects.json /.netlify/functions/redirects 200
