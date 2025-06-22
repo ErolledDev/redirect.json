@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, doc, updateDoc, increment } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, updateDoc, increment, setDoc, getDoc } from 'firebase/firestore';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -44,7 +44,7 @@ export const handler = async (event, context) => {
   }
 
   try {
-    // Track API call for analytics
+    // Track API call for analytics FIRST
     await trackApiCall();
     
     // Fetch all redirects from Firestore
@@ -98,22 +98,67 @@ export const handler = async (event, context) => {
 // Track API call for analytics
 async function trackApiCall() {
   try {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const now = new Date();
+    const today = now.toISOString().split('T')[0]; // YYYY-MM-DD format
     const analyticsRef = doc(db, 'analytics', today);
     
-    await updateDoc(analyticsRef, {
-      api_calls: increment(1),
-      last_call: new Date()
-    }).catch(async (error) => {
-      // If document doesn't exist, create it
-      if (error.code === 'not-found') {
-        await setDoc(analyticsRef, {
-          api_calls: 1,
-          date: today,
-          last_call: new Date()
-        });
-      }
-    });
+    // Try to get existing document first
+    const docSnap = await getDoc(analyticsRef);
+    
+    if (docSnap.exists()) {
+      // Document exists, increment the counter
+      await updateDoc(analyticsRef, {
+        api_calls: increment(1),
+        last_call: now
+      });
+    } else {
+      // Document doesn't exist, create it
+      await setDoc(analyticsRef, {
+        api_calls: 1,
+        date: today,
+        last_call: now,
+        created_at: now
+      });
+    }
+    
+    // Also update monthly totals
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const monthlyRef = doc(db, 'analytics_monthly', monthKey);
+    
+    const monthlySnap = await getDoc(monthlyRef);
+    if (monthlySnap.exists()) {
+      await updateDoc(monthlyRef, {
+        api_calls: increment(1),
+        last_call: now
+      });
+    } else {
+      await setDoc(monthlyRef, {
+        api_calls: 1,
+        month: monthKey,
+        last_call: now,
+        created_at: now
+      });
+    }
+    
+    // Update total counter
+    const totalRef = doc(db, 'analytics_total', 'all_time');
+    const totalSnap = await getDoc(totalRef);
+    
+    if (totalSnap.exists()) {
+      await updateDoc(totalRef, {
+        api_calls: increment(1),
+        last_call: now
+      });
+    } else {
+      await setDoc(totalRef, {
+        api_calls: 1,
+        last_call: now,
+        created_at: now
+      });
+    }
+    
+    console.log(`Analytics tracked successfully for ${today}`);
+    
   } catch (error) {
     console.error('Error tracking API call:', error);
     // Don't fail the main request if analytics tracking fails

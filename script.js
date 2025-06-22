@@ -17,7 +17,8 @@ import {
   serverTimestamp,
   orderBy,
   query,
-  increment 
+  increment,
+  getDoc 
 } from 'firebase/firestore';
 
 // Firebase configuration
@@ -561,20 +562,26 @@ function updateStats() {
 
 async function loadAnalytics() {
   try {
-    // For now, we'll simulate analytics data
-    // In a real implementation, you'd track API calls in a separate collection
-    const today = new Date().toDateString();
-    const thisMonth = new Date().getMonth();
+    const now = new Date();
+    const today = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     
-    // Get stored analytics or initialize
-    const analytics = JSON.parse(localStorage.getItem('redirectAnalytics') || '{}');
+    // Load today's analytics
+    const todayRef = doc(db, 'analytics', today);
+    const todaySnap = await getDoc(todayRef);
+    const todayCount = todaySnap.exists() ? todaySnap.data().api_calls || 0 : 0;
     
-    const todayCount = analytics[today] || 0;
-    const monthCount = Object.keys(analytics)
-      .filter(date => new Date(date).getMonth() === thisMonth)
-      .reduce((sum, date) => sum + (analytics[date] || 0), 0);
-    const totalCount = Object.values(analytics).reduce((sum, count) => sum + count, 0);
+    // Load monthly analytics
+    const monthlyRef = doc(db, 'analytics_monthly', monthKey);
+    const monthlySnap = await getDoc(monthlyRef);
+    const monthCount = monthlySnap.exists() ? monthlySnap.data().api_calls || 0 : 0;
     
+    // Load total analytics
+    const totalRef = doc(db, 'analytics_total', 'all_time');
+    const totalSnap = await getDoc(totalRef);
+    const totalCount = totalSnap.exists() ? totalSnap.data().api_calls || 0 : 0;
+    
+    // Update UI
     apiCallsToday.textContent = todayCount.toLocaleString();
     apiCallsMonth.textContent = monthCount.toLocaleString();
     apiCallsTotal.textContent = totalCount.toLocaleString();
@@ -583,23 +590,47 @@ async function loadAnalytics() {
     usagePercentage.textContent = `${percentage}%`;
     
     // Update color based on usage
-    const usageElement = document.getElementById('usage-percentage');
-    if (percentage > 80) {
-      usageElement.parentElement.parentElement.className = usageElement.parentElement.parentElement.className.replace('bg-orange-50 border-orange-200', 'bg-red-50 border-red-200');
+    const usageCard = usagePercentage.closest('.bg-orange-50');
+    if (usageCard) {
+      if (percentage > 80) {
+        usageCard.className = usageCard.className.replace('bg-orange-50 border-orange-200', 'bg-red-50 border-red-200');
+        usageCard.querySelector('.text-orange-600').className = usageCard.querySelector('.text-orange-600').className.replace('text-orange-600', 'text-red-600');
+        usageCard.querySelector('.text-orange-900').className = usageCard.querySelector('.text-orange-900').className.replace('text-orange-900', 'text-red-900');
+      } else if (percentage > 50) {
+        usageCard.className = usageCard.className.replace('bg-orange-50 border-orange-200', 'bg-yellow-50 border-yellow-200');
+        usageCard.querySelector('.text-orange-600').className = usageCard.querySelector('.text-orange-600').className.replace('text-orange-600', 'text-yellow-600');
+        usageCard.querySelector('.text-orange-900').className = usageCard.querySelector('.text-orange-900').className.replace('text-orange-900', 'text-yellow-900');
+      }
     }
+    
+    console.log('Analytics loaded:', { todayCount, monthCount, totalCount });
     
   } catch (error) {
     console.error('Error loading analytics:', error);
+    showAuthError('Error loading analytics: ' + error.message);
   }
 }
 
-// Track API call (call this when redirects.json is accessed)
-function trackApiCall() {
-  const today = new Date().toDateString();
-  const analytics = JSON.parse(localStorage.getItem('redirectAnalytics') || '{}');
-  analytics[today] = (analytics[today] || 0) + 1;
-  localStorage.setItem('redirectAnalytics', JSON.stringify(analytics));
-}
+// Test analytics function - call this to simulate API calls
+window.testAnalytics = async function() {
+  try {
+    // Make a few test calls to the API endpoint
+    for (let i = 0; i < 5; i++) {
+      await fetch('/api/redirects.json');
+      console.log(`Test API call ${i + 1} completed`);
+    }
+    
+    // Wait a moment then reload analytics
+    setTimeout(() => {
+      loadAnalytics();
+      showSuccess('Test analytics calls completed! Check the analytics section.');
+    }, 2000);
+    
+  } catch (error) {
+    console.error('Error testing analytics:', error);
+    showAuthError('Error testing analytics: ' + error.message);
+  }
+};
 
 // Third party URL management
 function updateThirdPartyDisplay() {
@@ -703,9 +734,6 @@ urlModal.addEventListener('click', (e) => {
 
 // Handle redirects.json endpoint - PUBLIC ACCESS
 async function handleRedirectsJson() {
-  // Track this API call
-  trackApiCall();
-  
   try {
     const querySnapshot = await getDocs(collection(db, 'redirects'));
     const redirects = {};
@@ -747,6 +775,19 @@ service cloud.firestore {
     match /redirects/{document} {
       allow read: if true;
       allow write: if request.auth != null;
+    }
+    
+    // Allow public read/write access to analytics for tracking
+    match /analytics/{document} {
+      allow read, write: if true;
+    }
+    
+    match /analytics_monthly/{document} {
+      allow read, write: if true;
+    }
+    
+    match /analytics_total/{document} {
+      allow read, write: if true;
     }
   }
 }
