@@ -13,6 +13,7 @@ import {
   getDocs, 
   deleteDoc, 
   doc, 
+  updateDoc,
   serverTimestamp,
   orderBy,
   query 
@@ -42,12 +43,29 @@ const signupBtn = document.getElementById('signup-btn');
 const signoutBtn = document.getElementById('signout-btn');
 const authError = document.getElementById('auth-error');
 const userEmail = document.getElementById('user-email');
+const userAvatar = document.getElementById('user-avatar');
 const redirectForm = document.getElementById('redirect-form');
+const editForm = document.getElementById('edit-form');
 const redirectsList = document.getElementById('redirects-list');
 const refreshBtn = document.getElementById('refresh-btn');
+const editModal = document.getElementById('edit-modal');
+
+// Navigation
+const navTabs = document.querySelectorAll('.nav-tab');
+const dashboardSections = document.querySelectorAll('.dashboard-section');
+
+// Stats elements
+const totalRedirects = document.getElementById('total-redirects');
+const articleCount = document.getElementById('article-count');
+const websiteCount = document.getElementById('website-count');
+const videoCount = document.getElementById('video-count');
 
 // Auth state management
 let isSignUp = false;
+let redirectsData = [];
+
+// Third party website URL - CHANGE THIS TO YOUR THIRD PARTY WEBSITE
+const THIRD_PARTY_WEBSITE = 'mythirdpartywebsite.com'; // Change this to your actual third party website
 
 // Check if we're on the redirects.json page
 if (window.location.pathname === '/redirects.json' || window.location.search.includes('json')) {
@@ -58,15 +76,24 @@ if (window.location.pathname === '/redirects.json' || window.location.search.inc
 }
 
 function initApp() {
+  // Navigation event listeners
+  navTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const sectionId = tab.dataset.section;
+      switchSection(sectionId);
+    });
+  });
+
   // Auth event listeners
   authForm.addEventListener('submit', handleAuth);
   signupBtn.addEventListener('click', () => {
     isSignUp = true;
-    signinBtn.textContent = 'Sign Up';
+    signinBtn.innerHTML = '<i class="fas fa-user-plus"></i> Sign Up';
     signupBtn.style.display = 'none';
   });
   signoutBtn.addEventListener('click', handleSignOut);
   redirectForm.addEventListener('submit', handleCreateRedirect);
+  editForm.addEventListener('submit', handleEditRedirect);
   refreshBtn.addEventListener('click', loadRedirects);
 
   // Auth state observer
@@ -80,6 +107,29 @@ function initApp() {
   });
 }
 
+function switchSection(sectionId) {
+  // Update nav tabs
+  navTabs.forEach(tab => {
+    tab.classList.remove('active');
+    if (tab.dataset.section === sectionId) {
+      tab.classList.add('active');
+    }
+  });
+
+  // Update sections
+  dashboardSections.forEach(section => {
+    section.classList.remove('active');
+  });
+  document.getElementById(`${sectionId}-section`).classList.add('active');
+
+  // Load data if needed
+  if (sectionId === 'manage') {
+    loadRedirects();
+  } else if (sectionId === 'overview') {
+    updateStats();
+  }
+}
+
 function showAuth() {
   authSection.style.display = 'flex';
   appSection.style.display = 'none';
@@ -90,6 +140,8 @@ function showApp(user) {
   authSection.style.display = 'none';
   appSection.style.display = 'block';
   userEmail.textContent = user.email;
+  userAvatar.textContent = user.email.charAt(0).toUpperCase();
+  updateStats();
 }
 
 function showAuthError(message) {
@@ -107,14 +159,17 @@ function showSuccess(message) {
   if (!successMsg) {
     successMsg = document.createElement('div');
     successMsg.className = 'success-message';
-    redirectForm.parentNode.insertBefore(successMsg, redirectForm);
+    const activeSection = document.querySelector('.dashboard-section.active .section-card');
+    if (activeSection) {
+      activeSection.insertBefore(successMsg, activeSection.firstChild);
+    }
   }
-  successMsg.textContent = message;
+  successMsg.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
   successMsg.classList.add('show');
   
   setTimeout(() => {
     successMsg.classList.remove('show');
-  }, 3000);
+  }, 4000);
 }
 
 async function handleAuth(e) {
@@ -146,7 +201,6 @@ async function handleSignOut() {
 async function handleCreateRedirect(e) {
   e.preventDefault();
   
-  const formData = new FormData(e.target);
   const slug = document.getElementById('slug').value.trim();
   const url = document.getElementById('url').value.trim();
   const title = document.getElementById('title').value.trim();
@@ -166,6 +220,7 @@ async function handleCreateRedirect(e) {
   const cleanSlug = slug.replace(/^\/+/, '').replace(/\s+/g, '-').toLowerCase();
   
   const redirectData = {
+    slug: cleanSlug,
     title,
     desc,
     url,
@@ -179,28 +234,82 @@ async function handleCreateRedirect(e) {
   };
   
   try {
-    await addDoc(collection(db, 'redirects'), {
-      slug: cleanSlug,
-      ...redirectData
-    });
+    await addDoc(collection(db, 'redirects'), redirectData);
     
     showSuccess('Redirect created successfully!');
     redirectForm.reset();
     loadRedirects();
+    updateStats();
+    
+    // Switch to manage section
+    switchSection('manage');
   } catch (error) {
     showAuthError('Error creating redirect: ' + error.message);
   }
 }
 
+async function handleEditRedirect(e) {
+  e.preventDefault();
+  
+  const id = document.getElementById('edit-id').value;
+  const slug = document.getElementById('edit-slug').value.trim();
+  const url = document.getElementById('edit-url').value.trim();
+  const title = document.getElementById('edit-title').value.trim();
+  const desc = document.getElementById('edit-desc').value.trim();
+  const image = document.getElementById('edit-image').value.trim();
+  const video = document.getElementById('edit-video').value.trim();
+  const keywords = document.getElementById('edit-keywords').value.trim();
+  const siteName = document.getElementById('edit-site_name').value.trim();
+  const type = document.getElementById('edit-type').value;
+  
+  if (!slug || !url || !title) {
+    showAuthError('Please fill in all required fields');
+    return;
+  }
+  
+  // Clean slug
+  const cleanSlug = slug.replace(/^\/+/, '').replace(/\s+/g, '-').toLowerCase();
+  
+  const updateData = {
+    slug: cleanSlug,
+    title,
+    desc,
+    url,
+    image,
+    video,
+    keywords,
+    site_name: siteName,
+    type,
+    updated_at: serverTimestamp()
+  };
+  
+  try {
+    await updateDoc(doc(db, 'redirects', id), updateData);
+    
+    showSuccess('Redirect updated successfully!');
+    closeEditModal();
+    loadRedirects();
+    updateStats();
+  } catch (error) {
+    showAuthError('Error updating redirect: ' + error.message);
+  }
+}
+
 async function loadRedirects() {
-  redirectsList.innerHTML = '<div class="loading">Loading redirects...</div>';
+  redirectsList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading redirects...</div>';
   
   try {
     const q = query(collection(db, 'redirects'), orderBy('created_at', 'desc'));
     const querySnapshot = await getDocs(q);
     
     if (querySnapshot.empty) {
-      redirectsList.innerHTML = '<div class="loading">No redirects found. Create your first redirect above!</div>';
+      redirectsList.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-link" style="font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;"></i>
+          <h3>No redirects found</h3>
+          <p>Create your first redirect to get started!</p>
+        </div>
+      `;
       return;
     }
     
@@ -209,30 +318,42 @@ async function loadRedirects() {
       redirects.push({ id: doc.id, ...doc.data() });
     });
     
+    redirectsData = redirects;
     renderRedirects(redirects);
+    updateStats();
   } catch (error) {
-    redirectsList.innerHTML = '<div class="loading">Error loading redirects: ' + error.message + '</div>';
+    redirectsList.innerHTML = `
+      <div class="loading" style="color: var(--danger-color);">
+        <i class="fas fa-exclamation-triangle"></i> Error loading redirects: ${error.message}
+      </div>
+    `;
   }
 }
 
 function renderRedirects(redirects) {
   redirectsList.innerHTML = redirects.map(redirect => `
-    <div class="redirect-item">
-      <div class="redirect-header">
+    <div class="redirect-card">
+      <div class="card-header">
         <div>
-          <div class="redirect-title">${redirect.title}</div>
-          <div class="redirect-slug">/${redirect.slug}</div>
+          <div class="card-title">${redirect.title}</div>
+          <div class="card-slug">/${redirect.slug}</div>
         </div>
-        <div class="redirect-actions">
-          <button class="btn btn-small btn-danger" onclick="deleteRedirect('${redirect.id}')">
-            Delete
+        <div class="card-actions">
+          <button class="btn btn-small btn-success" onclick="viewRedirect('${redirect.slug}')" title="View on third party site">
+            <i class="fas fa-eye"></i>
+          </button>
+          <button class="btn btn-small btn-warning" onclick="editRedirect('${redirect.id}')" title="Edit redirect">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn btn-small btn-danger" onclick="deleteRedirect('${redirect.id}')" title="Delete redirect">
+            <i class="fas fa-trash"></i>
           </button>
         </div>
       </div>
       
-      <div class="redirect-meta">
+      <div class="card-meta">
         <div class="meta-item">
-          <div class="meta-label">URL:</div>
+          <div class="meta-label"><i class="fas fa-external-link-alt"></i> Destination URL:</div>
           <div class="meta-value">
             <a href="${redirect.url}" target="_blank">${redirect.url}</a>
           </div>
@@ -240,37 +361,104 @@ function renderRedirects(redirects) {
         
         ${redirect.desc ? `
         <div class="meta-item">
-          <div class="meta-label">Description:</div>
+          <div class="meta-label"><i class="fas fa-align-left"></i> Description:</div>
           <div class="meta-value">${redirect.desc}</div>
         </div>
         ` : ''}
         
         ${redirect.keywords ? `
         <div class="meta-item">
-          <div class="meta-label">Keywords:</div>
+          <div class="meta-label"><i class="fas fa-tags"></i> Keywords:</div>
           <div class="meta-value">${redirect.keywords}</div>
         </div>
         ` : ''}
         
-        <div class="meta-item">
-          <div class="meta-label">Type:</div>
-          <div class="meta-value">${redirect.type}</div>
-        </div>
-        
         ${redirect.site_name ? `
         <div class="meta-item">
-          <div class="meta-label">Site:</div>
+          <div class="meta-label"><i class="fas fa-globe"></i> Site Name:</div>
           <div class="meta-value">${redirect.site_name}</div>
         </div>
         ` : ''}
+
+        ${redirect.image ? `
+        <div class="meta-item">
+          <div class="meta-label"><i class="fas fa-image"></i> Image:</div>
+          <div class="meta-value">
+            <a href="${redirect.image}" target="_blank">View Image</a>
+          </div>
+        </div>
+        ` : ''}
+
+        ${redirect.video ? `
+        <div class="meta-item">
+          <div class="meta-label"><i class="fas fa-video"></i> Video:</div>
+          <div class="meta-value">
+            <a href="${redirect.video}" target="_blank">View Video</a>
+          </div>
+        </div>
+        ` : ''}
+      </div>
+
+      <div class="card-footer">
+        <div class="card-stats">
+          <div class="stat-item">
+            <i class="fas fa-calendar"></i>
+            ${redirect.created_at?.toDate?.()?.toLocaleDateString() || 'N/A'}
+          </div>
+        </div>
+        <div class="type-badge type-${redirect.type}">
+          ${redirect.type === 'article' ? '📄' : redirect.type === 'website' ? '🌐' : '🎥'} ${redirect.type}
+        </div>
       </div>
     </div>
   `).join('');
 }
 
-// Global function for delete button
+function updateStats() {
+  if (!redirectsData.length) return;
+  
+  const stats = redirectsData.reduce((acc, redirect) => {
+    acc.total++;
+    acc[redirect.type] = (acc[redirect.type] || 0) + 1;
+    return acc;
+  }, { total: 0, article: 0, website: 0, video: 0 });
+  
+  totalRedirects.textContent = stats.total;
+  articleCount.textContent = stats.article;
+  websiteCount.textContent = stats.website;
+  videoCount.textContent = stats.video;
+}
+
+// Global functions for card actions
+window.viewRedirect = function(slug) {
+  // Open third party website with the slug
+  // CHANGE 'mythirdpartywebsite.com' TO YOUR ACTUAL THIRD PARTY WEBSITE
+  const thirdPartyUrl = `https://${THIRD_PARTY_WEBSITE}/${slug}`;
+  window.open(thirdPartyUrl, '_blank');
+};
+
+window.editRedirect = function(id) {
+  const redirect = redirectsData.find(r => r.id === id);
+  if (!redirect) return;
+  
+  // Populate edit form
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-slug').value = redirect.slug || '';
+  document.getElementById('edit-url').value = redirect.url || '';
+  document.getElementById('edit-title').value = redirect.title || '';
+  document.getElementById('edit-desc').value = redirect.desc || '';
+  document.getElementById('edit-image').value = redirect.image || '';
+  document.getElementById('edit-video').value = redirect.video || '';
+  document.getElementById('edit-keywords').value = redirect.keywords || '';
+  document.getElementById('edit-site_name').value = redirect.site_name || '';
+  document.getElementById('edit-type').value = redirect.type || 'article';
+  
+  // Show modal
+  editModal.style.display = 'flex';
+};
+
 window.deleteRedirect = async function(id) {
-  if (!confirm('Are you sure you want to delete this redirect?')) {
+  if (!confirm('Are you sure you want to delete this redirect? This action cannot be undone.')) {
     return;
   }
   
@@ -278,10 +466,23 @@ window.deleteRedirect = async function(id) {
     await deleteDoc(doc(db, 'redirects', id));
     showSuccess('Redirect deleted successfully!');
     loadRedirects();
+    updateStats();
   } catch (error) {
     showAuthError('Error deleting redirect: ' + error.message);
   }
 };
+
+window.closeEditModal = function() {
+  editModal.style.display = 'none';
+  editForm.reset();
+};
+
+// Close modal when clicking outside
+editModal.addEventListener('click', (e) => {
+  if (e.target === editModal) {
+    closeEditModal();
+  }
+});
 
 // Handle redirects.json endpoint - PUBLIC ACCESS
 async function handleRedirectsJson() {
