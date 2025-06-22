@@ -16,7 +16,8 @@ import {
   updateDoc,
   serverTimestamp,
   orderBy,
-  query 
+  query,
+  increment 
 } from 'firebase/firestore';
 
 // Firebase configuration
@@ -49,6 +50,7 @@ const editForm = document.getElementById('edit-form');
 const redirectsList = document.getElementById('redirects-list');
 const refreshBtn = document.getElementById('refresh-btn');
 const editModal = document.getElementById('edit-modal');
+const urlModal = document.getElementById('url-modal');
 
 // Navigation
 const navTabs = document.querySelectorAll('.nav-tab');
@@ -59,13 +61,29 @@ const totalRedirects = document.getElementById('total-redirects');
 const articleCount = document.getElementById('article-count');
 const websiteCount = document.getElementById('website-count');
 const videoCount = document.getElementById('video-count');
+const productCount = document.getElementById('product-count');
+const bookCount = document.getElementById('book-count');
+
+// Filter elements
+const searchFilter = document.getElementById('search-filter');
+const typeFilter = document.getElementById('type-filter');
+const sortFilter = document.getElementById('sort-filter');
+const clearFilters = document.getElementById('clear-filters');
+
+// Analytics elements
+const apiCallsToday = document.getElementById('api-calls-today');
+const apiCallsMonth = document.getElementById('api-calls-month');
+const apiCallsTotal = document.getElementById('api-calls-total');
+const usagePercentage = document.getElementById('usage-percentage');
+const refreshAnalytics = document.getElementById('refresh-analytics');
 
 // Auth state management
 let isSignUp = false;
 let redirectsData = [];
+let filteredRedirects = [];
 
-// Third party website URL - CHANGE THIS TO YOUR THIRD PARTY WEBSITE
-const THIRD_PARTY_WEBSITE = 'mythirdpartywebsite.com'; // Change this to your actual third party website
+// Third party website URL - stored in localStorage
+let THIRD_PARTY_WEBSITE = localStorage.getItem('thirdPartyWebsite') || 'mythirdpartywebsite.com';
 
 // Check if we're on the redirects.json page
 if (window.location.pathname === '/redirects.json' || window.location.search.includes('json')) {
@@ -76,6 +94,9 @@ if (window.location.pathname === '/redirects.json' || window.location.search.inc
 }
 
 function initApp() {
+  // Update third party URL display
+  updateThirdPartyDisplay();
+  
   // Navigation event listeners
   navTabs.forEach(tab => {
     tab.addEventListener('click', () => {
@@ -95,12 +116,20 @@ function initApp() {
   redirectForm.addEventListener('submit', handleCreateRedirect);
   editForm.addEventListener('submit', handleEditRedirect);
   refreshBtn.addEventListener('click', loadRedirects);
+  refreshAnalytics.addEventListener('click', loadAnalytics);
+
+  // Filter event listeners
+  searchFilter.addEventListener('input', applyFilters);
+  typeFilter.addEventListener('change', applyFilters);
+  sortFilter.addEventListener('change', applyFilters);
+  clearFilters.addEventListener('click', clearAllFilters);
 
   // Auth state observer
   onAuthStateChanged(auth, (user) => {
     if (user) {
       showApp(user);
       loadRedirects();
+      loadAnalytics();
     } else {
       showAuth();
     }
@@ -127,6 +156,8 @@ function switchSection(sectionId) {
     loadRedirects();
   } else if (sectionId === 'overview') {
     updateStats();
+  } else if (sectionId === 'analytics') {
+    loadAnalytics();
   }
 }
 
@@ -304,10 +335,12 @@ async function loadRedirects() {
     
     if (querySnapshot.empty) {
       redirectsList.innerHTML = `
-        <div class="empty-state">
-          <i class="fas fa-link" style="font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;"></i>
-          <h3>No redirects found</h3>
-          <p>Create your first redirect to get started!</p>
+        <div class="col-span-full">
+          <div class="empty-state">
+            <i class="fas fa-link" style="font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;"></i>
+            <h3>No redirects found</h3>
+            <p>Create your first redirect to get started!</p>
+          </div>
         </div>
       `;
       return;
@@ -319,99 +352,194 @@ async function loadRedirects() {
     });
     
     redirectsData = redirects;
-    renderRedirects(redirects);
+    filteredRedirects = redirects;
+    applyFilters();
     updateStats();
   } catch (error) {
     redirectsList.innerHTML = `
-      <div class="loading" style="color: var(--danger-color);">
-        <i class="fas fa-exclamation-triangle"></i> Error loading redirects: ${error.message}
+      <div class="col-span-full">
+        <div class="loading" style="color: var(--danger-color);">
+          <i class="fas fa-exclamation-triangle"></i> Error loading redirects: ${error.message}
+        </div>
       </div>
     `;
   }
 }
 
+function applyFilters() {
+  const searchTerm = searchFilter.value.toLowerCase();
+  const typeValue = typeFilter.value;
+  const sortValue = sortFilter.value;
+  
+  // Filter redirects
+  filteredRedirects = redirectsData.filter(redirect => {
+    const matchesSearch = !searchTerm || 
+      redirect.title.toLowerCase().includes(searchTerm) ||
+      redirect.slug.toLowerCase().includes(searchTerm) ||
+      redirect.url.toLowerCase().includes(searchTerm) ||
+      (redirect.desc && redirect.desc.toLowerCase().includes(searchTerm));
+    
+    const matchesType = !typeValue || redirect.type === typeValue;
+    
+    return matchesSearch && matchesType;
+  });
+  
+  // Sort redirects
+  filteredRedirects.sort((a, b) => {
+    switch (sortValue) {
+      case 'oldest':
+        return (a.created_at?.toDate?.() || new Date()) - (b.created_at?.toDate?.() || new Date());
+      case 'title':
+        return a.title.localeCompare(b.title);
+      case 'title-desc':
+        return b.title.localeCompare(a.title);
+      case 'newest':
+      default:
+        return (b.created_at?.toDate?.() || new Date()) - (a.created_at?.toDate?.() || new Date());
+    }
+  });
+  
+  renderRedirects(filteredRedirects);
+}
+
+function clearAllFilters() {
+  searchFilter.value = '';
+  typeFilter.value = '';
+  sortFilter.value = 'newest';
+  applyFilters();
+}
+
 function renderRedirects(redirects) {
-  redirectsList.innerHTML = redirects.map(redirect => `
-    <div class="redirect-card">
-      <div class="card-header">
-        <div>
-          <div class="card-title">${redirect.title}</div>
-          <div class="card-slug">/${redirect.slug}</div>
-        </div>
-        <div class="card-actions">
-          <button class="btn btn-small btn-success" onclick="viewRedirect('${redirect.slug}')" title="View on third party site">
-            <i class="fas fa-eye"></i>
-          </button>
-          <button class="btn btn-small btn-warning" onclick="editRedirect('${redirect.id}')" title="Edit redirect">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-small btn-danger" onclick="deleteRedirect('${redirect.id}')" title="Delete redirect">
-            <i class="fas fa-trash"></i>
-          </button>
+  if (redirects.length === 0) {
+    redirectsList.innerHTML = `
+      <div class="col-span-full">
+        <div class="empty-state">
+          <i class="fas fa-search" style="font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;"></i>
+          <h3>No redirects match your filters</h3>
+          <p>Try adjusting your search criteria</p>
         </div>
       </div>
-      
-      <div class="card-meta">
-        <div class="meta-item">
-          <div class="meta-label"><i class="fas fa-external-link-alt"></i> Destination URL:</div>
-          <div class="meta-value">
-            <a href="${redirect.url}" target="_blank">${redirect.url}</a>
-          </div>
-        </div>
-        
-        ${redirect.desc ? `
-        <div class="meta-item">
-          <div class="meta-label"><i class="fas fa-align-left"></i> Description:</div>
-          <div class="meta-value">${redirect.desc}</div>
-        </div>
-        ` : ''}
-        
-        ${redirect.keywords ? `
-        <div class="meta-item">
-          <div class="meta-label"><i class="fas fa-tags"></i> Keywords:</div>
-          <div class="meta-value">${redirect.keywords}</div>
-        </div>
-        ` : ''}
-        
-        ${redirect.site_name ? `
-        <div class="meta-item">
-          <div class="meta-label"><i class="fas fa-globe"></i> Site Name:</div>
-          <div class="meta-value">${redirect.site_name}</div>
-        </div>
-        ` : ''}
+    `;
+    return;
+  }
 
+  redirectsList.innerHTML = redirects.map(redirect => {
+    const typeEmojis = {
+      article: '📄',
+      website: '🌐',
+      video: '🎥',
+      product: '🛍️',
+      book: '📚',
+      music: '🎵',
+      profile: '👤'
+    };
+    
+    const typeColors = {
+      article: 'bg-blue-100 text-blue-800',
+      website: 'bg-green-100 text-green-800',
+      video: 'bg-red-100 text-red-800',
+      product: 'bg-purple-100 text-purple-800',
+      book: 'bg-yellow-100 text-yellow-800',
+      music: 'bg-pink-100 text-pink-800',
+      profile: 'bg-gray-100 text-gray-800'
+    };
+
+    const keywords = redirect.keywords ? redirect.keywords.split(',').map(k => k.trim()).filter(k => k) : [];
+    const displayKeywords = keywords.slice(0, 3);
+    const remainingCount = keywords.length - 3;
+    
+    const shortUrl = `/${redirect.slug}`;
+    const longUrl = `https://${THIRD_PARTY_WEBSITE}/${redirect.slug}`;
+    
+    return `
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col">
         ${redirect.image ? `
-        <div class="meta-item">
-          <div class="meta-label"><i class="fas fa-image"></i> Image:</div>
-          <div class="meta-value">
-            <a href="${redirect.image}" target="_blank">View Image</a>
+          <div class="aspect-video overflow-hidden flex-shrink-0 bg-gray-100">
+            <img src="${redirect.image}" alt="${redirect.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.parentElement.style.display='none'">
           </div>
-        </div>
         ` : ''}
-
-        ${redirect.video ? `
-        <div class="meta-item">
-          <div class="meta-label"><i class="fas fa-video"></i> Video:</div>
-          <div class="meta-value">
-            <a href="${redirect.video}" target="_blank">View Video</a>
+        
+        <div class="p-4 sm:p-6 flex flex-col flex-grow">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center space-x-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeColors[redirect.type] || typeColors.article}">
+                ${typeEmojis[redirect.type] || typeEmojis.article} ${redirect.type.charAt(0).toUpperCase() + redirect.type.slice(1)}
+              </span>
+            </div>
+            ${redirect.site_name ? `
+              <span class="text-xs text-gray-500 truncate ml-2 max-w-24">${redirect.site_name}</span>
+            ` : ''}
+          </div>
+          
+          <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2">${redirect.title}</h3>
+          
+          ${redirect.desc ? `
+            <div class="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">
+              <div>${redirect.desc}</div>
+            </div>
+          ` : ''}
+          
+          ${keywords.length > 0 ? `
+            <div class="flex flex-wrap gap-1 mb-4">
+              ${displayKeywords.map(keyword => `
+                <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs truncate max-w-20" title="${keyword}">#${keyword}</span>
+              `).join('')}
+              ${remainingCount > 0 ? `<span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">+${remainingCount}</span>` : ''}
+            </div>
+          ` : ''}
+          
+          <div class="text-xs text-gray-500 mb-4">
+            Created: ${redirect.created_at?.toDate?.()?.toLocaleDateString() || 'N/A'}
+            ${redirect.updated_at && redirect.updated_at !== redirect.created_at ? `
+              <div>Updated: ${redirect.updated_at?.toDate?.()?.toLocaleDateString() || 'N/A'}</div>
+            ` : ''}
+          </div>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center space-x-2">
+              <span class="text-xs font-medium text-gray-500 w-12 flex-shrink-0">Short:</span>
+              <code class="text-xs bg-gray-100 px-2 py-1 rounded flex-1 truncate">${shortUrl}</code>
+              <button onclick="copyToClipboard('${shortUrl}')" class="p-1 text-gray-400 hover:text-blue-600 transition-colors flex-shrink-0" title="Copy short URL">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+              </button>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs font-medium text-gray-500 w-12 flex-shrink-0">Long:</span>
+              <code class="text-xs bg-gray-100 px-2 py-1 rounded flex-1 truncate" title="${longUrl}">${longUrl.length > 50 ? longUrl.substring(0, 50) + '...' : longUrl}</code>
+              <button onclick="copyToClipboard('${longUrl}')" class="p-1 text-gray-400 hover:text-blue-600 transition-colors flex-shrink-0" title="Copy long URL">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
+            <button onclick="viewRedirect('${redirect.slug}')" class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+              View
+            </button>
+            <button onclick="editRedirect('${redirect.id}')" class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+              Edit
+            </button>
+            <button onclick="deleteRedirect('${redirect.id}')" class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+              Delete
+            </button>
           </div>
         </div>
-        ` : ''}
       </div>
-
-      <div class="card-footer">
-        <div class="card-stats">
-          <div class="stat-item">
-            <i class="fas fa-calendar"></i>
-            ${redirect.created_at?.toDate?.()?.toLocaleDateString() || 'N/A'}
-          </div>
-        </div>
-        <div class="type-badge type-${redirect.type}">
-          ${redirect.type === 'article' ? '📄' : redirect.type === 'website' ? '🌐' : '🎥'} ${redirect.type}
-        </div>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function updateStats() {
@@ -421,18 +549,101 @@ function updateStats() {
     acc.total++;
     acc[redirect.type] = (acc[redirect.type] || 0) + 1;
     return acc;
-  }, { total: 0, article: 0, website: 0, video: 0 });
+  }, { total: 0, article: 0, website: 0, video: 0, product: 0, book: 0, music: 0, profile: 0 });
   
   totalRedirects.textContent = stats.total;
   articleCount.textContent = stats.article;
   websiteCount.textContent = stats.website;
   videoCount.textContent = stats.video;
+  if (productCount) productCount.textContent = stats.product;
+  if (bookCount) bookCount.textContent = stats.book;
 }
+
+async function loadAnalytics() {
+  try {
+    // For now, we'll simulate analytics data
+    // In a real implementation, you'd track API calls in a separate collection
+    const today = new Date().toDateString();
+    const thisMonth = new Date().getMonth();
+    
+    // Get stored analytics or initialize
+    const analytics = JSON.parse(localStorage.getItem('redirectAnalytics') || '{}');
+    
+    const todayCount = analytics[today] || 0;
+    const monthCount = Object.keys(analytics)
+      .filter(date => new Date(date).getMonth() === thisMonth)
+      .reduce((sum, date) => sum + (analytics[date] || 0), 0);
+    const totalCount = Object.values(analytics).reduce((sum, count) => sum + count, 0);
+    
+    apiCallsToday.textContent = todayCount.toLocaleString();
+    apiCallsMonth.textContent = monthCount.toLocaleString();
+    apiCallsTotal.textContent = totalCount.toLocaleString();
+    
+    const percentage = ((todayCount / 50000) * 100).toFixed(2);
+    usagePercentage.textContent = `${percentage}%`;
+    
+    // Update color based on usage
+    const usageElement = document.getElementById('usage-percentage');
+    if (percentage > 80) {
+      usageElement.parentElement.parentElement.className = usageElement.parentElement.parentElement.className.replace('bg-orange-50 border-orange-200', 'bg-red-50 border-red-200');
+    }
+    
+  } catch (error) {
+    console.error('Error loading analytics:', error);
+  }
+}
+
+// Track API call (call this when redirects.json is accessed)
+function trackApiCall() {
+  const today = new Date().toDateString();
+  const analytics = JSON.parse(localStorage.getItem('redirectAnalytics') || '{}');
+  analytics[today] = (analytics[today] || 0) + 1;
+  localStorage.setItem('redirectAnalytics', JSON.stringify(analytics));
+}
+
+// Third party URL management
+function updateThirdPartyDisplay() {
+  const urlElement = document.getElementById('third-party-url');
+  if (urlElement) {
+    urlElement.textContent = `${THIRD_PARTY_WEBSITE}/slug-name`;
+  }
+}
+
+window.updateThirdPartyUrl = function() {
+  document.getElementById('third-party-input').value = THIRD_PARTY_WEBSITE;
+  urlModal.style.display = 'flex';
+};
+
+window.closeUrlModal = function() {
+  urlModal.style.display = 'none';
+};
+
+window.saveThirdPartyUrl = function() {
+  const newUrl = document.getElementById('third-party-input').value.trim();
+  if (newUrl) {
+    THIRD_PARTY_WEBSITE = newUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    localStorage.setItem('thirdPartyWebsite', THIRD_PARTY_WEBSITE);
+    updateThirdPartyDisplay();
+    showSuccess('Third party website URL updated successfully!');
+    closeUrlModal();
+    // Re-render redirects to update URLs
+    if (filteredRedirects.length > 0) {
+      renderRedirects(filteredRedirects);
+    }
+  }
+};
+
+// Copy to clipboard function
+window.copyToClipboard = function(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    showSuccess('Copied to clipboard!');
+  }).catch(err => {
+    console.error('Failed to copy: ', err);
+  });
+};
 
 // Global functions for card actions
 window.viewRedirect = function(slug) {
-  // Open third party website with the slug
-  // CHANGE 'mythirdpartywebsite.com' TO YOUR ACTUAL THIRD PARTY WEBSITE
   const thirdPartyUrl = `https://${THIRD_PARTY_WEBSITE}/${slug}`;
   window.open(thirdPartyUrl, '_blank');
 };
@@ -477,15 +688,24 @@ window.closeEditModal = function() {
   editForm.reset();
 };
 
-// Close modal when clicking outside
+// Close modals when clicking outside
 editModal.addEventListener('click', (e) => {
   if (e.target === editModal) {
     closeEditModal();
   }
 });
 
+urlModal.addEventListener('click', (e) => {
+  if (e.target === urlModal) {
+    closeUrlModal();
+  }
+});
+
 // Handle redirects.json endpoint - PUBLIC ACCESS
 async function handleRedirectsJson() {
+  // Track this API call
+  trackApiCall();
+  
   try {
     const querySnapshot = await getDocs(collection(db, 'redirects'));
     const redirects = {};

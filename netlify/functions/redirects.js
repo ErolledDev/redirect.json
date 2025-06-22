@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, updateDoc, increment } from 'firebase/firestore';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -44,6 +44,9 @@ export const handler = async (event, context) => {
   }
 
   try {
+    // Track API call for analytics
+    await trackApiCall();
+    
     // Fetch all redirects from Firestore
     const querySnapshot = await getDocs(collection(db, 'redirects'));
     const redirects = {};
@@ -91,3 +94,28 @@ export const handler = async (event, context) => {
     };
   }
 };
+
+// Track API call for analytics
+async function trackApiCall() {
+  try {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const analyticsRef = doc(db, 'analytics', today);
+    
+    await updateDoc(analyticsRef, {
+      api_calls: increment(1),
+      last_call: new Date()
+    }).catch(async (error) => {
+      // If document doesn't exist, create it
+      if (error.code === 'not-found') {
+        await setDoc(analyticsRef, {
+          api_calls: 1,
+          date: today,
+          last_call: new Date()
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Error tracking API call:', error);
+    // Don't fail the main request if analytics tracking fails
+  }
+}
