@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Redirect Manager - Professional Admin Panel</title>
     <link rel="stylesheet" href="styles.css" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Tailwind CSS -->
@@ -170,27 +174,28 @@
             <form id="redirect-form" class="redirect-form">
               <div class="form-row">
                 <div class="form-group">
-                  <label for="slug">
-                    <i class="fas fa-hashtag"></i> Slug (URL Path)
+                  <label for="title">
+                    <i class="fas fa-heading"></i> Title *
                   </label>
-                  <input type="text" id="slug" placeholder="e.g., my-awesome-post" required />
-                  <small>Will be used as: seo-redirects.netlify.app/slug</small>
+                  <input type="text" id="title" placeholder="e.g., My Awesome Blog Post" required />
+                  <small>This will automatically generate the slug below</small>
                 </div>
                 
                 <div class="form-group">
-                  <label for="url">
-                    <i class="fas fa-external-link-alt"></i> Redirect URL
+                  <label for="slug">
+                    <i class="fas fa-hashtag"></i> Slug (URL Path) *
                   </label>
-                  <input type="url" id="url" placeholder="https://example.com" required />
+                  <input type="text" id="slug" placeholder="Auto-generated from title" required />
+                  <small>Will be used as: seo360.xyz/slug</small>
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
-                  <label for="title">
-                    <i class="fas fa-heading"></i> Title
+                  <label for="url">
+                    <i class="fas fa-external-link-alt"></i> Redirect URL *
                   </label>
-                  <input type="text" id="title" placeholder="Page title for SEO" required />
+                  <input type="url" id="url" placeholder="https://example.com" required />
                 </div>
                 
                 <div class="form-group">
@@ -530,28 +535,28 @@ export default function RedirectPage({ slug }) {
                 </div>
 
                 <!-- PHP -->
-
                 <div class="bg-white border border-gray-200 rounded-lg p-6">
-  <h4 class="font-semibold text-gray-900 mb-4">
-    <i class="fab fa-php text-purple-500"></i> PHP
-  </h4>
-  <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code>&lt;?php
-    // Fetch all redirects
-    $json = file_get_contents('https://seo-redirects.netlify.app/api/redirects.json');
-    $redirects = json_decode($json, true);
+                  <h4 class="font-semibold text-gray-900 mb-4">
+                    <i class="fab fa-php text-purple-500"></i> PHP
+                  </h4>
+                  <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code>&lt;?php
+// Fetch all redirects
+$json = file_get_contents('https://seo-redirects.netlify.app/api/redirects.json');
+$redirects = json_decode($json, true);
 
-    // Get specific redirect
-    $slug = $_GET['slug'] ?? '';
-    if (isset($redirects[$slug])) {
-      $redirect = $redirects[$slug];
-      header('Location: ' . $redirect['url']);
-      exit;
-    } else {
-      http_response_code(404);
-      echo 'Redirect not found';
-    }
-  ?&gt;</code></pre>
-</div>
+// Get specific redirect
+$slug = $_GET['slug'] ?? '';
+if (isset($redirects[$slug])) {
+  $redirect = $redirects[$slug];
+  header('Location: ' . $redirect['url']);
+  exit;
+} else {
+  http_response_code(404);
+  echo 'Redirect not found';
+}
+?></code></pre>
+                </div>
+
                 <!-- Python -->
                 <div class="bg-white border border-gray-200 rounded-lg p-6">
                   <h4 class="font-semibold text-gray-900 mb-4">
@@ -670,26 +675,26 @@ curl -s "https://seo-redirects.netlify.app/api/redirects.json" | \
             
             <div class="form-row">
               <div class="form-group">
+                <label for="edit-title">
+                  <i class="fas fa-heading"></i> Title
+                </label>
+                <input type="text" id="edit-title" required />
+              </div>
+              
+              <div class="form-group">
                 <label for="edit-slug">
                   <i class="fas fa-hashtag"></i> Slug
                 </label>
                 <input type="text" id="edit-slug" required />
               </div>
-              
+            </div>
+
+            <div class="form-row">
               <div class="form-group">
                 <label for="edit-url">
                   <i class="fas fa-external-link-alt"></i> URL
                 </label>
                 <input type="url" id="edit-url" required />
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="edit-title">
-                  <i class="fas fa-heading"></i> Title
-                </label>
-                <input type="text" id="edit-title" required />
               </div>
               
               <div class="form-group">

@@ -78,6 +78,12 @@ const apiCallsTotal = document.getElementById('api-calls-total');
 const usagePercentage = document.getElementById('usage-percentage');
 const refreshAnalytics = document.getElementById('refresh-analytics');
 
+// Form elements for auto-slug
+const titleInput = document.getElementById('title');
+const slugInput = document.getElementById('slug');
+const editTitleInput = document.getElementById('edit-title');
+const editSlugInput = document.getElementById('edit-slug');
+
 // Auth state management
 let isSignUp = false;
 let redirectsData = [];
@@ -85,6 +91,16 @@ let filteredRedirects = [];
 
 // Third party website URL - stored in localStorage
 let THIRD_PARTY_WEBSITE = localStorage.getItem('thirdPartyWebsite') || 'mythirdpartywebsite.com';
+
+// Utility function to generate slug from title
+function generateSlug(title) {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Remove special characters
+    .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
+    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+}
 
 // Check if we're on the redirects.json page
 if (window.location.pathname === '/redirects.json' || window.location.search.includes('json')) {
@@ -97,6 +113,39 @@ if (window.location.pathname === '/redirects.json' || window.location.search.inc
 function initApp() {
   // Update third party URL display
   updateThirdPartyDisplay();
+  
+  // Auto-slug generation for create form
+  if (titleInput && slugInput) {
+    titleInput.addEventListener('input', (e) => {
+      const title = e.target.value;
+      const slug = generateSlug(title);
+      slugInput.value = slug;
+      
+      // Show slug preview
+      updateSlugPreview(slug);
+    });
+    
+    // Allow manual slug editing
+    slugInput.addEventListener('input', (e) => {
+      const slug = generateSlug(e.target.value);
+      slugInput.value = slug;
+      updateSlugPreview(slug);
+    });
+  }
+  
+  // Auto-slug generation for edit form
+  if (editTitleInput && editSlugInput) {
+    editTitleInput.addEventListener('input', (e) => {
+      const title = e.target.value;
+      const slug = generateSlug(title);
+      editSlugInput.value = slug;
+    });
+    
+    editSlugInput.addEventListener('input', (e) => {
+      const slug = generateSlug(e.target.value);
+      editSlugInput.value = slug;
+    });
+  }
   
   // Navigation event listeners
   navTabs.forEach(tab => {
@@ -135,6 +184,22 @@ function initApp() {
       showAuth();
     }
   });
+}
+
+function updateSlugPreview(slug) {
+  let preview = document.querySelector('.slug-preview');
+  if (!preview) {
+    preview = document.createElement('div');
+    preview.className = 'slug-preview';
+    slugInput.parentNode.appendChild(preview);
+  }
+  
+  if (slug) {
+    preview.innerHTML = `<i class="fas fa-link"></i> Preview: <strong>seo360.xyz/${slug}</strong>`;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
 }
 
 function switchSection(sectionId) {
@@ -249,7 +314,7 @@ async function handleCreateRedirect(e) {
   }
   
   // Clean slug (remove leading slash, spaces, etc.)
-  const cleanSlug = slug.replace(/^\/+/, '').replace(/\s+/g, '-').toLowerCase();
+  const cleanSlug = generateSlug(slug);
   
   const redirectData = {
     slug: cleanSlug,
@@ -270,6 +335,13 @@ async function handleCreateRedirect(e) {
     
     showSuccess('Redirect created successfully!');
     redirectForm.reset();
+    
+    // Clear slug preview
+    const preview = document.querySelector('.slug-preview');
+    if (preview) {
+      preview.style.display = 'none';
+    }
+    
     loadRedirects();
     updateStats();
     
@@ -300,7 +372,7 @@ async function handleEditRedirect(e) {
   }
   
   // Clean slug
-  const cleanSlug = slug.replace(/^\/+/, '').replace(/\s+/g, '-').toLowerCase();
+  const cleanSlug = generateSlug(slug);
   
   const updateData = {
     slug: cleanSlug,
@@ -338,7 +410,7 @@ async function loadRedirects() {
       redirectsList.innerHTML = `
         <div class="col-span-full">
           <div class="empty-state">
-            <i class="fas fa-link" style="font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;"></i>
+            <i class="fas fa-link" style="font-size: 4rem; color: var(--secondary-color); margin-bottom: 1.5rem;"></i>
             <h3>No redirects found</h3>
             <p>Create your first redirect to get started!</p>
           </div>
@@ -415,7 +487,7 @@ function renderRedirects(redirects) {
     redirectsList.innerHTML = `
       <div class="col-span-full">
         <div class="empty-state">
-          <i class="fas fa-search" style="font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;"></i>
+          <i class="fas fa-search" style="font-size: 4rem; color: var(--secondary-color); margin-bottom: 1.5rem;"></i>
           <h3>No redirects match your filters</h3>
           <p>Try adjusting your search criteria</p>
         </div>
@@ -436,13 +508,13 @@ function renderRedirects(redirects) {
     };
     
     const typeColors = {
-      article: 'bg-blue-100 text-blue-800',
-      website: 'bg-green-100 text-green-800',
-      video: 'bg-red-100 text-red-800',
-      product: 'bg-purple-100 text-purple-800',
-      book: 'bg-yellow-100 text-yellow-800',
-      music: 'bg-pink-100 text-pink-800',
-      profile: 'bg-gray-100 text-gray-800'
+      article: 'type-article',
+      website: 'type-website',
+      video: 'type-video',
+      product: 'type-product',
+      book: 'type-book',
+      music: 'type-music',
+      profile: 'type-profile'
     };
 
     const keywords = redirect.keywords ? redirect.keywords.split(',').map(k => k.trim()).filter(k => k) : [];
@@ -453,30 +525,33 @@ function renderRedirects(redirects) {
     const longUrl = `https://${THIRD_PARTY_WEBSITE}/${redirect.slug}`;
     
     return `
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col">
+      <div class="redirect-card">
         ${redirect.image ? `
-          <div class="aspect-video overflow-hidden flex-shrink-0 bg-gray-100">
-            <img src="${redirect.image}" alt="${redirect.title}" class="w-full h-full object-cover" loading="lazy" onerror="this.parentElement.style.display='none'">
+          <div class="card-image">
+            <img src="${redirect.image}" alt="${redirect.title}" loading="lazy" onerror="this.parentElement.style.display='none'">
           </div>
         ` : ''}
         
-        <div class="p-4 sm:p-6 flex flex-col flex-grow">
-          <div class="flex items-start justify-between mb-3">
-            <div class="flex items-center space-x-2">
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeColors[redirect.type] || typeColors.article}">
-                ${typeEmojis[redirect.type] || typeEmojis.article} ${redirect.type.charAt(0).toUpperCase() + redirect.type.slice(1)}
-              </span>
+        <div class="card-content">
+          <div class="card-header">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2 mb-3">
+                <span class="type-badge ${typeColors[redirect.type] || typeColors.article}">
+                  ${typeEmojis[redirect.type] || typeEmojis.article} ${redirect.type.charAt(0).toUpperCase() + redirect.type.slice(1)}
+                </span>
+                ${redirect.site_name ? `
+                  <span class="text-xs text-gray-500 truncate max-w-32">${redirect.site_name}</span>
+                ` : ''}
+              </div>
+              
+              <h3 class="card-title">${redirect.title}</h3>
+              <div class="card-slug">${redirect.slug}</div>
             </div>
-            ${redirect.site_name ? `
-              <span class="text-xs text-gray-500 truncate ml-2 max-w-24">${redirect.site_name}</span>
-            ` : ''}
           </div>
           
-          <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2">${redirect.title}</h3>
-          
           ${redirect.desc ? `
-            <div class="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">
-              <div>${redirect.desc}</div>
+            <div class="text-gray-600 text-sm mb-4 line-clamp-3">
+              ${redirect.desc}
             </div>
           ` : ''}
           
@@ -518,19 +593,19 @@ function renderRedirects(redirects) {
           </div>
           
           <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
-            <button onclick="viewRedirect('${redirect.slug}')" class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+            <button onclick="viewRedirect('${redirect.slug}')" class="flex-1 btn btn-primary btn-small">
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
               </svg>
               View
             </button>
-            <button onclick="editRedirect('${redirect.id}')" class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+            <button onclick="editRedirect('${redirect.id}')" class="flex-1 btn btn-success btn-small">
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
               </svg>
               Edit
             </button>
-            <button onclick="deleteRedirect('${redirect.id}')" class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+            <button onclick="deleteRedirect('${redirect.id}')" class="flex-1 btn btn-danger btn-small">
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
               </svg>
