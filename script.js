@@ -538,6 +538,10 @@ function renderRedirects(redirects) {
     const displayKeywords = keywords.slice(0, 3);
     const remainingCount = keywords.length - 3;
     
+    const createdDate = redirect.created_at?.toDate?.()?.toLocaleDateString() || 'N/A';
+    const updatedDate = redirect.updated_at?.toDate?.()?.toLocaleDateString() || 'N/A';
+    const isUpdated = redirect.updated_at && redirect.updated_at !== redirect.created_at;
+    
     return `
       <div class="redirect-card">
         ${redirect.image ? `
@@ -548,18 +552,18 @@ function renderRedirects(redirects) {
         
         <div class="card-content">
           <div class="card-header">
-            <div class="flex-1">
-              <div class="flex items-center space-x-2 mb-3">
+            <div class="card-meta-row">
+              <div class="card-type-info">
                 <span class="type-badge ${typeConfig.color}">
                   ${typeConfig.emoji} ${typeConfig.label}
                 </span>
                 ${redirect.site_name ? `
-                  <span class="text-xs text-gray-500 truncate max-w-32">${redirect.site_name}</span>
+                  <span class="card-site-name" title="${redirect.site_name}">${redirect.site_name}</span>
                 ` : ''}
               </div>
-              
-              <h3 class="card-title">${redirect.title}</h3>
             </div>
+            
+            <h3 class="card-title">${redirect.title}</h3>
           </div>
           
           ${redirect.desc ? `
@@ -577,23 +581,31 @@ function renderRedirects(redirects) {
             </div>
           ` : ''}
           
-          <div class="card-meta">
-            Created: ${redirect.created_at?.toDate?.()?.toLocaleDateString() || 'N/A'}
-            ${redirect.updated_at && redirect.updated_at !== redirect.created_at ? `
-              <div>Updated: ${redirect.updated_at?.toDate?.()?.toLocaleDateString() || 'N/A'}</div>
-            ` : ''}
-          </div>
-          
-          <div class="card-actions">
-            <button onclick="deleteRedirect('${redirect.id}')" class="btn btn-danger btn-small">
-              <i class="fas fa-trash"></i> Delete
-            </button>
-            <button onclick="viewRedirect('${redirect.slug}')" class="btn btn-primary btn-small">
-              <i class="fas fa-external-link-alt"></i> View
-            </button>
-            <button onclick="editRedirect('${redirect.id}')" class="btn btn-success btn-small">
-              <i class="fas fa-edit"></i> Edit
-            </button>
+          <div class="card-footer">
+            <div class="card-meta">
+              <div class="card-meta-item">
+                <i class="fas fa-calendar-plus"></i>
+                <span>Created ${createdDate}</span>
+              </div>
+              ${isUpdated ? `
+                <div class="card-meta-item">
+                  <i class="fas fa-calendar-edit"></i>
+                  <span>Updated ${updatedDate}</span>
+                </div>
+              ` : ''}
+            </div>
+            
+            <div class="card-actions">
+              <button onclick="deleteRedirect('${redirect.id}')" class="btn btn-danger btn-small">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+              <button onclick="viewRedirect('${redirect.slug}')" class="btn btn-primary btn-small">
+                <i class="fas fa-external-link-alt"></i> View
+              </button>
+              <button onclick="editRedirect('${redirect.id}')" class="btn btn-success btn-small">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+            </div>
           </div>
         </div>
       </div>
