@@ -2,7 +2,6 @@ import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
   signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged 
 } from 'firebase/auth';
@@ -41,7 +40,6 @@ const authSection = document.getElementById('auth-section');
 const appSection = document.getElementById('app-section');
 const authForm = document.getElementById('auth-form');
 const signinBtn = document.getElementById('signin-btn');
-const signupBtn = document.getElementById('signup-btn');
 const signoutBtn = document.getElementById('signout-btn');
 const authError = document.getElementById('auth-error');
 const userEmail = document.getElementById('user-email');
@@ -52,6 +50,7 @@ const redirectsList = document.getElementById('redirects-list');
 const refreshBtn = document.getElementById('refresh-btn');
 const editModal = document.getElementById('edit-modal');
 const urlModal = document.getElementById('url-modal');
+const toastContainer = document.getElementById('toast-container');
 
 // Navigation
 const navTabs = document.querySelectorAll('.nav-tab');
@@ -59,11 +58,11 @@ const dashboardSections = document.querySelectorAll('.dashboard-section');
 
 // Stats elements
 const totalRedirects = document.getElementById('total-redirects');
-const articleCount = document.getElementById('article-count');
 const websiteCount = document.getElementById('website-count');
+const articleCount = document.getElementById('article-count');
 const videoCount = document.getElementById('video-count');
 const productCount = document.getElementById('product-count');
-const bookCount = document.getElementById('book-count');
+const serviceCount = document.getElementById('service-count');
 
 // Filter elements
 const searchFilter = document.getElementById('search-filter');
@@ -85,12 +84,71 @@ const editTitleInput = document.getElementById('edit-title');
 const editSlugInput = document.getElementById('edit-slug');
 
 // Auth state management
-let isSignUp = false;
 let redirectsData = [];
 let filteredRedirects = [];
 
 // Third party website URL - stored in localStorage
 let THIRD_PARTY_WEBSITE = localStorage.getItem('thirdPartyWebsite') || 'mythirdpartywebsite.com';
+
+// Content type configurations
+const contentTypes = {
+  // Primary Types
+  website: { emoji: '🌐', label: 'Website', color: 'type-website' },
+  article: { emoji: '📄', label: 'Article', color: 'type-article' },
+  video: { emoji: '🎥', label: 'Video', color: 'type-video' },
+  product: { emoji: '🛍️', label: 'Product', color: 'type-product' },
+  
+  // Extended Types
+  blog: { emoji: '📝', label: 'Blog', color: 'type-blog' },
+  news: { emoji: '📰', label: 'News', color: 'type-news' },
+  service: { emoji: '🔧', label: 'Service', color: 'type-service' },
+  portfolio: { emoji: '💼', label: 'Portfolio', color: 'type-portfolio' },
+  landing: { emoji: '🎯', label: 'Landing Page', color: 'type-landing' },
+  course: { emoji: '🎓', label: 'Course', color: 'type-course' },
+  ebook: { emoji: '📚', label: 'eBook', color: 'type-ebook' },
+  music: { emoji: '🎵', label: 'Music', color: 'type-music' },
+  podcast: { emoji: '🎙️', label: 'Podcast', color: 'type-podcast' },
+  app: { emoji: '📱', label: 'App', color: 'type-app' },
+  tool: { emoji: '🛠️', label: 'Tool', color: 'type-tool' },
+  software: { emoji: '💻', label: 'Software', color: 'type-software' },
+  game: { emoji: '🎮', label: 'Game', color: 'type-game' },
+  event: { emoji: '📅', label: 'Event', color: 'type-event' },
+  business: { emoji: '🏢', label: 'Business', color: 'type-business' },
+  profile: { emoji: '👤', label: 'Profile', color: 'type-profile' },
+  company: { emoji: '🏛️', label: 'Company', color: 'type-company' },
+  organization: { emoji: '🏢', label: 'Organization', color: 'type-organization' }
+};
+
+// Toast notification system
+function showToast(message, type = 'success', duration = 4000) {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  
+  const icon = type === 'success' ? 'fa-check-circle' : 
+               type === 'error' ? 'fa-exclamation-circle' : 
+               type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+  
+  toast.innerHTML = `
+    <div class="toast-content">
+      <i class="fas ${icon}"></i>
+      <span>${message}</span>
+    </div>
+    <button class="toast-close" onclick="this.parentElement.remove()">
+      <i class="fas fa-times"></i>
+    </button>
+  `;
+  
+  toastContainer.appendChild(toast);
+  
+  // Trigger animation
+  setTimeout(() => toast.classList.add('show'), 100);
+  
+  // Auto remove
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
 
 // Utility function to generate slug from title
 function generateSlug(title) {
@@ -157,11 +215,6 @@ function initApp() {
 
   // Auth event listeners
   authForm.addEventListener('submit', handleAuth);
-  signupBtn.addEventListener('click', () => {
-    isSignUp = true;
-    signinBtn.innerHTML = '<i class="fas fa-user-plus"></i> Sign Up';
-    signupBtn.style.display = 'none';
-  });
   signoutBtn.addEventListener('click', handleSignOut);
   redirectForm.addEventListener('submit', handleCreateRedirect);
   editForm.addEventListener('submit', handleEditRedirect);
@@ -250,25 +303,6 @@ function clearAuthError() {
   authError.classList.remove('show');
 }
 
-function showSuccess(message) {
-  // Create or update success message
-  let successMsg = document.querySelector('.success-message');
-  if (!successMsg) {
-    successMsg = document.createElement('div');
-    successMsg.className = 'success-message';
-    const activeSection = document.querySelector('.dashboard-section.active .section-card');
-    if (activeSection) {
-      activeSection.insertBefore(successMsg, activeSection.firstChild);
-    }
-  }
-  successMsg.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-  successMsg.classList.add('show');
-  
-  setTimeout(() => {
-    successMsg.classList.remove('show');
-  }, 4000);
-}
-
 async function handleAuth(e) {
   e.preventDefault();
   clearAuthError();
@@ -277,21 +311,21 @@ async function handleAuth(e) {
   const password = document.getElementById('password').value;
   
   try {
-    if (isSignUp) {
-      await createUserWithEmailAndPassword(auth, email, password);
-    } else {
-      await signInWithEmailAndPassword(auth, email, password);
-    }
+    await signInWithEmailAndPassword(auth, email, password);
+    showToast('Successfully signed in!', 'success');
   } catch (error) {
     showAuthError(error.message);
+    showToast('Sign in failed: ' + error.message, 'error');
   }
 }
 
 async function handleSignOut() {
   try {
     await signOut(auth);
+    showToast('Successfully signed out!', 'success');
   } catch (error) {
     console.error('Sign out error:', error);
+    showToast('Sign out failed', 'error');
   }
 }
 
@@ -309,7 +343,7 @@ async function handleCreateRedirect(e) {
   const type = document.getElementById('type').value;
   
   if (!slug || !url || !title) {
-    showAuthError('Please fill in all required fields');
+    showToast('Please fill in all required fields', 'error');
     return;
   }
   
@@ -333,7 +367,7 @@ async function handleCreateRedirect(e) {
   try {
     await addDoc(collection(db, 'redirects'), redirectData);
     
-    showSuccess('Redirect created successfully!');
+    showToast('Redirect created successfully!', 'success');
     redirectForm.reset();
     
     // Clear slug preview
@@ -348,7 +382,7 @@ async function handleCreateRedirect(e) {
     // Switch to manage section
     switchSection('manage');
   } catch (error) {
-    showAuthError('Error creating redirect: ' + error.message);
+    showToast('Error creating redirect: ' + error.message, 'error');
   }
 }
 
@@ -367,7 +401,7 @@ async function handleEditRedirect(e) {
   const type = document.getElementById('edit-type').value;
   
   if (!slug || !url || !title) {
-    showAuthError('Please fill in all required fields');
+    showToast('Please fill in all required fields', 'error');
     return;
   }
   
@@ -390,12 +424,12 @@ async function handleEditRedirect(e) {
   try {
     await updateDoc(doc(db, 'redirects', id), updateData);
     
-    showSuccess('Redirect updated successfully!');
+    showToast('Redirect updated successfully!', 'success');
     closeEditModal();
     loadRedirects();
     updateStats();
   } catch (error) {
-    showAuthError('Error updating redirect: ' + error.message);
+    showToast('Error updating redirect: ' + error.message, 'error');
   }
 }
 
@@ -436,6 +470,7 @@ async function loadRedirects() {
         </div>
       </div>
     `;
+    showToast('Error loading redirects: ' + error.message, 'error');
   }
 }
 
@@ -497,26 +532,8 @@ function renderRedirects(redirects) {
   }
 
   redirectsList.innerHTML = redirects.map(redirect => {
-    const typeEmojis = {
-      article: '📄',
-      website: '🌐',
-      video: '🎥',
-      product: '🛍️',
-      book: '📚',
-      music: '🎵',
-      profile: '👤'
-    };
+    const typeConfig = contentTypes[redirect.type] || contentTypes.website;
     
-    const typeColors = {
-      article: 'type-article',
-      website: 'type-website',
-      video: 'type-video',
-      product: 'type-product',
-      book: 'type-book',
-      music: 'type-music',
-      profile: 'type-profile'
-    };
-
     const keywords = redirect.keywords ? redirect.keywords.split(',').map(k => k.trim()).filter(k => k) : [];
     const displayKeywords = keywords.slice(0, 3);
     const remainingCount = keywords.length - 3;
@@ -536,8 +553,8 @@ function renderRedirects(redirects) {
           <div class="card-header">
             <div class="flex-1">
               <div class="flex items-center space-x-2 mb-3">
-                <span class="type-badge ${typeColors[redirect.type] || typeColors.article}">
-                  ${typeEmojis[redirect.type] || typeEmojis.article} ${redirect.type.charAt(0).toUpperCase() + redirect.type.slice(1)}
+                <span class="type-badge ${typeConfig.color}">
+                  ${typeConfig.emoji} ${typeConfig.label}
                 </span>
                 ${redirect.site_name ? `
                   <span class="text-xs text-gray-500 truncate max-w-32">${redirect.site_name}</span>
@@ -550,66 +567,53 @@ function renderRedirects(redirects) {
           </div>
           
           ${redirect.desc ? `
-            <div class="text-gray-600 text-sm mb-4 line-clamp-3">
+            <div class="card-description">
               ${redirect.desc}
             </div>
           ` : ''}
           
           ${keywords.length > 0 ? `
-            <div class="flex flex-wrap gap-1 mb-4">
+            <div class="card-keywords">
               ${displayKeywords.map(keyword => `
-                <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs truncate max-w-20" title="${keyword}">#${keyword}</span>
+                <span class="keyword-tag" title="${keyword}">#${keyword}</span>
               `).join('')}
-              ${remainingCount > 0 ? `<span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">+${remainingCount}</span>` : ''}
+              ${remainingCount > 0 ? `<span class="keyword-tag">+${remainingCount}</span>` : ''}
             </div>
           ` : ''}
           
-          <div class="text-xs text-gray-500 mb-4">
+          <div class="card-meta">
             Created: ${redirect.created_at?.toDate?.()?.toLocaleDateString() || 'N/A'}
             ${redirect.updated_at && redirect.updated_at !== redirect.created_at ? `
               <div>Updated: ${redirect.updated_at?.toDate?.()?.toLocaleDateString() || 'N/A'}</div>
             ` : ''}
           </div>
           
-          <div class="space-y-2 mb-4">
-            <div class="flex items-center space-x-2">
-              <span class="text-xs font-medium text-gray-500 w-12 flex-shrink-0">Short:</span>
-              <code class="text-xs bg-gray-100 px-2 py-1 rounded flex-1 truncate">${shortUrl}</code>
-              <button onclick="copyToClipboard('${shortUrl}')" class="p-1 text-gray-400 hover:text-blue-600 transition-colors flex-shrink-0" title="Copy short URL">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                </svg>
+          <div class="card-urls">
+            <div class="url-row">
+              <span class="url-label">Short:</span>
+              <code class="url-code">${shortUrl}</code>
+              <button onclick="copyToClipboard('${shortUrl}')" class="copy-btn" title="Copy short URL">
+                <i class="fas fa-copy"></i>
               </button>
             </div>
-            <div class="flex items-center space-x-2">
-              <span class="text-xs font-medium text-gray-500 w-12 flex-shrink-0">Long:</span>
-              <code class="text-xs bg-gray-100 px-2 py-1 rounded flex-1 truncate" title="${longUrl}">${longUrl.length > 50 ? longUrl.substring(0, 50) + '...' : longUrl}</code>
-              <button onclick="copyToClipboard('${longUrl}')" class="p-1 text-gray-400 hover:text-blue-600 transition-colors flex-shrink-0" title="Copy long URL">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                </svg>
+            <div class="url-row">
+              <span class="url-label">Long:</span>
+              <code class="url-code" title="${longUrl}">${longUrl.length > 50 ? longUrl.substring(0, 50) + '...' : longUrl}</code>
+              <button onclick="copyToClipboard('${longUrl}')" class="copy-btn" title="Copy long URL">
+                <i class="fas fa-copy"></i>
               </button>
             </div>
           </div>
           
-          <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
-            <button onclick="viewRedirect('${redirect.slug}')" class="flex-1 btn btn-primary btn-small">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-              </svg>
-              View
+          <div class="card-actions">
+            <button onclick="viewRedirect('${redirect.slug}')" class="btn btn-primary btn-small">
+              <i class="fas fa-external-link-alt"></i> View
             </button>
-            <button onclick="editRedirect('${redirect.id}')" class="flex-1 btn btn-success btn-small">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-              </svg>
-              Edit
+            <button onclick="editRedirect('${redirect.id}')" class="btn btn-success btn-small">
+              <i class="fas fa-edit"></i> Edit
             </button>
-            <button onclick="deleteRedirect('${redirect.id}')" class="flex-1 btn btn-danger btn-small">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-              </svg>
-              Delete
+            <button onclick="deleteRedirect('${redirect.id}')" class="btn btn-danger btn-small">
+              <i class="fas fa-trash"></i> Delete
             </button>
           </div>
         </div>
@@ -625,14 +629,14 @@ function updateStats() {
     acc.total++;
     acc[redirect.type] = (acc[redirect.type] || 0) + 1;
     return acc;
-  }, { total: 0, article: 0, website: 0, video: 0, product: 0, book: 0, music: 0, profile: 0 });
+  }, { total: 0 });
   
   totalRedirects.textContent = stats.total;
-  articleCount.textContent = stats.article;
-  websiteCount.textContent = stats.website;
-  videoCount.textContent = stats.video;
-  if (productCount) productCount.textContent = stats.product;
-  if (bookCount) bookCount.textContent = stats.book;
+  websiteCount.textContent = stats.website || 0;
+  articleCount.textContent = stats.article || 0;
+  videoCount.textContent = stats.video || 0;
+  if (productCount) productCount.textContent = stats.product || 0;
+  if (serviceCount) serviceCount.textContent = stats.service || 0;
 }
 
 async function loadAnalytics() {
@@ -682,13 +686,15 @@ async function loadAnalytics() {
     
   } catch (error) {
     console.error('Error loading analytics:', error);
-    showAuthError('Error loading analytics: ' + error.message);
+    showToast('Error loading analytics: ' + error.message, 'error');
   }
 }
 
 // Test analytics function - call this to simulate API calls
 window.testAnalytics = async function() {
   try {
+    showToast('Running analytics test...', 'info');
+    
     // Make a few test calls to the API endpoint
     for (let i = 0; i < 5; i++) {
       await fetch('/api/redirects.json');
@@ -698,12 +704,12 @@ window.testAnalytics = async function() {
     // Wait a moment then reload analytics
     setTimeout(() => {
       loadAnalytics();
-      showSuccess('Test analytics calls completed! Check the analytics section.');
+      showToast('Test analytics calls completed! Check the analytics section.', 'success');
     }, 2000);
     
   } catch (error) {
     console.error('Error testing analytics:', error);
-    showAuthError('Error testing analytics: ' + error.message);
+    showToast('Error testing analytics: ' + error.message, 'error');
   }
 };
 
@@ -730,7 +736,7 @@ window.saveThirdPartyUrl = function() {
     THIRD_PARTY_WEBSITE = newUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
     localStorage.setItem('thirdPartyWebsite', THIRD_PARTY_WEBSITE);
     updateThirdPartyDisplay();
-    showSuccess('Third party website URL updated successfully!');
+    showToast('Third party website URL updated successfully!', 'success');
     closeUrlModal();
     // Re-render redirects to update URLs
     if (filteredRedirects.length > 0) {
@@ -742,9 +748,10 @@ window.saveThirdPartyUrl = function() {
 // Copy to clipboard function
 window.copyToClipboard = function(text) {
   navigator.clipboard.writeText(text).then(() => {
-    showSuccess('Copied to clipboard!');
+    showToast('Copied to clipboard!', 'success');
   }).catch(err => {
     console.error('Failed to copy: ', err);
+    showToast('Failed to copy to clipboard', 'error');
   });
 };
 
@@ -768,7 +775,7 @@ window.editRedirect = function(id) {
   document.getElementById('edit-video').value = redirect.video || '';
   document.getElementById('edit-keywords').value = redirect.keywords || '';
   document.getElementById('edit-site_name').value = redirect.site_name || '';
-  document.getElementById('edit-type').value = redirect.type || 'article';
+  document.getElementById('edit-type').value = redirect.type || 'website';
   
   // Show modal
   editModal.style.display = 'flex';
@@ -781,11 +788,11 @@ window.deleteRedirect = async function(id) {
   
   try {
     await deleteDoc(doc(db, 'redirects', id));
-    showSuccess('Redirect deleted successfully!');
+    showToast('Redirect deleted successfully!', 'success');
     loadRedirects();
     updateStats();
   } catch (error) {
-    showAuthError('Error deleting redirect: ' + error.message);
+    showToast('Error deleting redirect: ' + error.message, 'error');
   }
 };
 
@@ -824,7 +831,7 @@ async function handleRedirectsJson() {
         video: data.video || '',
         keywords: data.keywords || '',
         site_name: data.site_name || '',
-        type: data.type || 'article',
+        type: data.type || 'website',
         created_at: data.created_at?.toDate?.()?.toISOString() || new Date().toISOString(),
         updated_at: data.updated_at?.toDate?.()?.toISOString() || new Date().toISOString()
       };
