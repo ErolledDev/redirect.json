@@ -538,9 +538,6 @@ function renderRedirects(redirects) {
     const displayKeywords = keywords.slice(0, 3);
     const remainingCount = keywords.length - 3;
     
-    const shortUrl = `/${redirect.slug}`;
-    const longUrl = `https://${THIRD_PARTY_WEBSITE}/${redirect.slug}`;
-    
     return `
       <div class="redirect-card">
         ${redirect.image ? `
@@ -562,7 +559,6 @@ function renderRedirects(redirects) {
               </div>
               
               <h3 class="card-title">${redirect.title}</h3>
-              <div class="card-slug">${redirect.slug}</div>
             </div>
           </div>
           
@@ -588,32 +584,15 @@ function renderRedirects(redirects) {
             ` : ''}
           </div>
           
-          <div class="card-urls">
-            <div class="url-row">
-              <span class="url-label">Short:</span>
-              <code class="url-code">${shortUrl}</code>
-              <button onclick="copyToClipboard('${shortUrl}')" class="copy-btn" title="Copy short URL">
-                <i class="fas fa-copy"></i>
-              </button>
-            </div>
-            <div class="url-row">
-              <span class="url-label">Long:</span>
-              <code class="url-code" title="${longUrl}">${longUrl.length > 50 ? longUrl.substring(0, 50) + '...' : longUrl}</code>
-              <button onclick="copyToClipboard('${longUrl}')" class="copy-btn" title="Copy long URL">
-                <i class="fas fa-copy"></i>
-              </button>
-            </div>
-          </div>
-          
           <div class="card-actions">
+            <button onclick="deleteRedirect('${redirect.id}')" class="btn btn-danger btn-small">
+              <i class="fas fa-trash"></i> Delete
+            </button>
             <button onclick="viewRedirect('${redirect.slug}')" class="btn btn-primary btn-small">
               <i class="fas fa-external-link-alt"></i> View
             </button>
             <button onclick="editRedirect('${redirect.id}')" class="btn btn-success btn-small">
               <i class="fas fa-edit"></i> Edit
-            </button>
-            <button onclick="deleteRedirect('${redirect.id}')" class="btn btn-danger btn-small">
-              <i class="fas fa-trash"></i> Delete
             </button>
           </div>
         </div>

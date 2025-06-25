@@ -575,7 +575,7 @@ body {
   grid-column: 1 / -1;
 }
 
-/* Enhanced Redirect Cards with Fixed Height */
+/* Enhanced Redirect Cards with Hover Actions */
 .redirects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
@@ -592,7 +592,7 @@ body {
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  height: 520px; /* Fixed height for consistency */
+  height: 420px; /* Consistent height for all cards */
   display: flex;
   flex-direction: column;
 }
@@ -617,6 +617,27 @@ body {
   border-color: var(--primary-color);
   box-shadow: var(--shadow-xl);
   transform: translateY(-4px);
+}
+
+/* Hover overlay for actions */
+.redirect-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.redirect-card:hover::after {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .card-image {
@@ -644,6 +665,7 @@ body {
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  position: relative;
 }
 
 .card-header {
@@ -661,18 +683,6 @@ body {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-.card-slug {
-  color: var(--primary-color);
-  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-  font-size: 0.75rem;
-  background: var(--primary-light);
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-sm);
-  display: inline-block;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
 }
 
 .card-description {
@@ -715,66 +725,42 @@ body {
   flex-shrink: 0;
 }
 
-.card-urls {
-  margin-bottom: 1rem;
-  flex-shrink: 0;
-}
-
-.url-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.url-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--secondary-color);
-  width: 40px;
-  flex-shrink: 0;
-}
-
-.url-code {
-  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-  font-size: 0.75rem;
-  background: var(--light-color);
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-sm);
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.copy-btn {
-  background: none;
-  border: none;
-  color: var(--secondary-color);
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.copy-btn:hover {
-  background: var(--primary-light);
-  color: var(--primary-color);
-}
-
+/* Hover Action Buttons */
 .card-actions {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
-  gap: 0.5rem;
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
+  gap: 1rem;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.redirect-card:hover .card-actions {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .card-actions .btn {
-  flex: 1;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.8rem;
+  padding: 1rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  transform: scale(0.9);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.redirect-card:hover .card-actions .btn {
+  transform: scale(1);
+}
+
+.card-actions .btn:hover {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: var(--shadow-xl);
 }
 
 .type-badge {
@@ -1047,7 +1033,7 @@ body {
   
   .redirect-card {
     height: auto;
-    min-height: 480px;
+    min-height: 380px;
   }
   
   .card-header {
@@ -1057,8 +1043,24 @@ body {
   }
   
   .card-actions {
-    width: 100%;
-    justify-content: flex-start;
+    position: static;
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    justify-content: center;
+  }
+  
+  .card-actions .btn {
+    transform: none;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+  }
+  
+  .redirect-card::after {
+    display: none;
   }
   
   .stats-grid {
