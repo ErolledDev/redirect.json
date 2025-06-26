@@ -52,6 +52,12 @@ const editModal = document.getElementById('edit-modal');
 const urlModal = document.getElementById('url-modal');
 const toastContainer = document.getElementById('toast-container');
 
+// Mobile menu elements
+const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+const sidebarClose = document.getElementById('sidebar-close');
+const appMainLayout = document.querySelector('.app-main-layout');
+
 // Navigation
 const navTabs = document.querySelectorAll('.nav-tab');
 const dashboardSections = document.querySelectorAll('.dashboard-section');
@@ -160,6 +166,15 @@ function generateSlug(title) {
     .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
 }
 
+// Mobile menu functions
+function toggleMobileMenu() {
+  appMainLayout.classList.toggle('menu-open');
+}
+
+function closeMobileMenu() {
+  appMainLayout.classList.remove('menu-open');
+}
+
 // Check if we're on the redirects.json page
 if (window.location.pathname === '/redirects.json' || window.location.search.includes('json')) {
   handleRedirectsJson();
@@ -171,6 +186,19 @@ if (window.location.pathname === '/redirects.json' || window.location.search.inc
 function initApp() {
   // Update third party URL display
   updateThirdPartyDisplay();
+  
+  // Mobile menu event listeners
+  if (mobileMenuToggle) {
+    mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+  }
+  
+  if (sidebarClose) {
+    sidebarClose.addEventListener('click', closeMobileMenu);
+  }
+  
+  if (mobileMenuOverlay) {
+    mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+  }
   
   // Auto-slug generation for create form
   if (titleInput && slugInput) {
@@ -210,6 +238,8 @@ function initApp() {
     tab.addEventListener('click', () => {
       const sectionId = tab.dataset.section;
       switchSection(sectionId);
+      // Close mobile menu when a tab is clicked
+      closeMobileMenu();
     });
   });
 

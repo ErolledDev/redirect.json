@@ -50,7 +50,12 @@
     <div id="app-section" class="app-container" style="display: none;">
       <header class="app-header">
         <div class="header-content">
-          <h1><i class="fas fa-link"></i> Redirect Manager</h1>
+          <div class="header-left">
+            <button id="mobile-menu-toggle" class="mobile-menu-toggle">
+              <i class="fas fa-bars"></i>
+            </button>
+            <h1><i class="fas fa-link"></i> Redirect Manager</h1>
+          </div>
           <div class="header-actions">
             <div class="user-info">
               <div class="user-avatar" id="user-avatar">U</div>
@@ -63,430 +68,451 @@
         </div>
       </header>
 
-      <main class="main-content">
-        <!-- Dashboard Navigation -->
-        <nav class="dashboard-nav">
-          <button class="nav-tab active" data-section="overview">
-            <i class="fas fa-chart-line"></i> Overview
-          </button>
-          <button class="nav-tab" data-section="create">
-            <i class="fas fa-plus-circle"></i> Create Redirect
-          </button>
-          <button class="nav-tab" data-section="manage">
-            <i class="fas fa-list"></i> Manage Redirects
-          </button>
-          <button class="nav-tab" data-section="analytics">
-            <i class="fas fa-chart-bar"></i> Analytics
-          </button>
-          <button class="nav-tab" data-section="docs">
-            <i class="fas fa-book"></i> Documentation
-          </button>
+      <div class="app-main-layout">
+        <!-- Mobile Menu Overlay -->
+        <div id="mobile-menu-overlay" class="mobile-menu-overlay"></div>
+
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar-nav">
+          <div class="sidebar-header">
+            <div class="sidebar-logo">
+              <i class="fas fa-link"></i>
+              <span>Dashboard</span>
+            </div>
+            <button id="sidebar-close" class="sidebar-close">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          
+          <div class="sidebar-menu">
+            <button class="nav-tab active" data-section="overview">
+              <i class="fas fa-chart-line"></i>
+              <span>Overview</span>
+            </button>
+            <button class="nav-tab" data-section="create">
+              <i class="fas fa-plus-circle"></i>
+              <span>Create Redirect</span>
+            </button>
+            <button class="nav-tab" data-section="manage">
+              <i class="fas fa-list"></i>
+              <span>Manage Redirects</span>
+            </button>
+            <button class="nav-tab" data-section="analytics">
+              <i class="fas fa-chart-bar"></i>
+              <span>Analytics</span>
+            </button>
+            <button class="nav-tab" data-section="docs">
+              <i class="fas fa-book"></i>
+              <span>Documentation</span>
+            </button>
+          </div>
         </nav>
 
-        <!-- Overview Section -->
-        <section id="overview-section" class="dashboard-section active">
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-number" id="total-redirects">0</div>
-              <div class="stat-label">Total Redirects</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number" id="website-count">0</div>
-              <div class="stat-label">Websites</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number" id="article-count">0</div>
-              <div class="stat-label">Articles</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number" id="video-count">0</div>
-              <div class="stat-label">Videos</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number" id="product-count">0</div>
-              <div class="stat-label">Products</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number" id="service-count">0</div>
-              <div class="stat-label">Services</div>
-            </div>
-          </div>
-
-          <div class="section-card">
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-info-circle"></i> Quick Info
-              </h2>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-              <div>
-                <h3 style="margin-bottom: 1rem; color: var(--primary-color);">
-                  <i class="fas fa-link"></i> JSON Endpoint
-                </h3>
-                <p style="margin-bottom: 0.5rem; color: var(--secondary-color);">Access your redirects data:</p>
-                <code style="background: var(--light-color); padding: 0.5rem; border-radius: var(--radius-sm); display: block; font-size: 0.875rem;">
-                  https://seo-redirects.netlify.app/api/redirects.json
-                </code>
+        <main class="main-content">
+          <!-- Overview Section -->
+          <section id="overview-section" class="dashboard-section active">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-number" id="total-redirects">0</div>
+                <div class="stat-label">Total Redirects</div>
               </div>
-              <div>
-                <h3 style="margin-bottom: 1rem; color: var(--success-color);">
-                  <i class="fas fa-external-link-alt"></i> Third Party Integration
-                </h3>
-                <p style="margin-bottom: 0.5rem; color: var(--secondary-color);">View redirects on your site:</p>
-                <code style="background: var(--light-color); padding: 0.5rem; border-radius: var(--radius-sm); display: block; font-size: 0.875rem;" id="third-party-url">
-                  mythirdpartywebsite.com/slug-name
-                </code>
-                <button onclick="updateThirdPartyUrl()" class="btn btn-small btn-outline mt-2">
-                  <i class="fas fa-edit"></i> Update URL
+              <div class="stat-card">
+                <div class="stat-number" id="website-count">0</div>
+                <div class="stat-label">Websites</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="article-count">0</div>
+                <div class="stat-label">Articles</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="video-count">0</div>
+                <div class="stat-label">Videos</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="product-count">0</div>
+                <div class="stat-label">Products</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="service-count">0</div>
+                <div class="stat-label">Services</div>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-header">
+                <h2 class="section-title">
+                  <i class="fas fa-info-circle"></i> Quick Info
+                </h2>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                <div>
+                  <h3 style="margin-bottom: 1rem; color: var(--primary-color);">
+                    <i class="fas fa-link"></i> JSON Endpoint
+                  </h3>
+                  <p style="margin-bottom: 0.5rem; color: var(--secondary-color);">Access your redirects data:</p>
+                  <code style="background: var(--light-color); padding: 0.5rem; border-radius: var(--radius-sm); display: block; font-size: 0.875rem;">
+                    https://seo-redirects.netlify.app/api/redirects.json
+                  </code>
+                </div>
+                <div>
+                  <h3 style="margin-bottom: 1rem; color: var(--success-color);">
+                    <i class="fas fa-external-link-alt"></i> Third Party Integration
+                  </h3>
+                  <p style="margin-bottom: 0.5rem; color: var(--secondary-color);">View redirects on your site:</p>
+                  <code style="background: var(--light-color); padding: 0.5rem; border-radius: var(--radius-sm); display: block; font-size: 0.875rem;" id="third-party-url">
+                    mythirdpartywebsite.com/slug-name
+                  </code>
+                  <button onclick="updateThirdPartyUrl()" class="btn btn-small btn-outline mt-2">
+                    <i class="fas fa-edit"></i> Update URL
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Analytics Testing Section -->
+            <div class="section-card">
+              <div class="section-header">
+                <h2 class="section-title">
+                  <i class="fas fa-flask"></i> Analytics Testing
+                </h2>
+              </div>
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 class="font-semibold text-blue-800 mb-2">Test Analytics Tracking</h4>
+                <p class="text-blue-700 text-sm mb-4">
+                  Click the button below to make 5 test API calls and verify that analytics tracking is working properly.
+                </p>
+                <button onclick="testAnalytics()" class="btn btn-primary">
+                  <i class="fas fa-play"></i> Run Analytics Test
                 </button>
               </div>
             </div>
-          </div>
+          </section>
 
-          <!-- Analytics Testing Section -->
-          <div class="section-card">
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-flask"></i> Analytics Testing
-              </h2>
+          <!-- Create Redirect Section -->
+          <section id="create-section" class="dashboard-section">
+            <div class="section-card">
+              <div class="section-header">
+                <h2 class="section-title">
+                  <i class="fas fa-plus-circle"></i> Create New Redirect
+                </h2>
+              </div>
+              
+              <form id="redirect-form" class="redirect-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="title">
+                      <i class="fas fa-heading"></i> Title *
+                    </label>
+                    <input type="text" id="title" placeholder="e.g., My Awesome Blog Post" required />
+                    <small>This will automatically generate the slug below</small>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="slug">
+                      <i class="fas fa-hashtag"></i> Slug (URL Path) *
+                    </label>
+                    <input type="text" id="slug" placeholder="Auto-generated from title" required />
+                    <small>Will be used as: seo360.xyz/slug</small>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="url">
+                      <i class="fas fa-external-link-alt"></i> Redirect URL *
+                    </label>
+                    <input type="url" id="url" placeholder="https://example.com" required />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="site_name">
+                      <i class="fas fa-globe"></i> Site Name
+                    </label>
+                    <input type="text" id="site_name" placeholder="Your Site Name" />
+                  </div>
+                </div>
+
+                <div class="form-group form-row-full">
+                  <label for="desc">
+                    <i class="fas fa-align-left"></i> Description
+                  </label>
+                  <textarea id="desc" placeholder="SEO description for better search visibility" rows="3"></textarea>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="image">
+                      <i class="fas fa-image"></i> Image URL
+                    </label>
+                    <input type="url" id="image" placeholder="https://example.com/image.jpg" />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="video">
+                      <i class="fas fa-video"></i> Video URL
+                    </label>
+                    <input type="url" id="video" placeholder="https://youtube.com/watch?v=..." />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="keywords">
+                      <i class="fas fa-tags"></i> Keywords
+                    </label>
+                    <input type="text" id="keywords" placeholder="keyword1, keyword2, keyword3" />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="type">
+                      <i class="fas fa-layer-group"></i> Content Type
+                    </label>
+                    <select id="type">
+                      <optgroup label="Primary Types">
+                        <option value="website">🌐 Website</option>
+                        <option value="article">📄 Article</option>
+                        <option value="video">🎥 Video</option>
+                        <option value="product">🛍️ Product</option>
+                      </optgroup>
+                      <optgroup label="Extended Types">
+                        <option value="blog">📝 Blog</option>
+                        <option value="news">📰 News</option>
+                        <option value="service">🔧 Service</option>
+                        <option value="portfolio">💼 Portfolio</option>
+                        <option value="landing">🎯 Landing Page</option>
+                        <option value="course">🎓 Course</option>
+                        <option value="ebook">📚 eBook</option>
+                        <option value="music">🎵 Music</option>
+                        <option value="podcast">🎙️ Podcast</option>
+                        <option value="app">📱 App</option>
+                        <option value="tool">🛠️ Tool</option>
+                        <option value="software">💻 Software</option>
+                        <option value="game">🎮 Game</option>
+                        <option value="event">📅 Event</option>
+                        <option value="business">🏢 Business</option>
+                        <option value="profile">👤 Profile</option>
+                        <option value="company">🏛️ Company</option>
+                        <option value="organization">🏢 Organization</option>
+                      </optgroup>
+                    </select>
+                  </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-large" style="width: 100%; margin-top: 1rem;">
+                  <i class="fas fa-plus"></i> Create Redirect
+                </button>
+              </form>
             </div>
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 class="font-semibold text-blue-800 mb-2">Test Analytics Tracking</h4>
-              <p class="text-blue-700 text-sm mb-4">
-                Click the button below to make 5 test API calls and verify that analytics tracking is working properly.
-              </p>
-              <button onclick="testAnalytics()" class="btn btn-primary">
-                <i class="fas fa-play"></i> Run Analytics Test
-              </button>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Create Redirect Section -->
-        <section id="create-section" class="dashboard-section">
-          <div class="section-card">
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-plus-circle"></i> Create New Redirect
-              </h2>
-            </div>
-            
-            <form id="redirect-form" class="redirect-form">
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="title">
-                    <i class="fas fa-heading"></i> Title *
-                  </label>
-                  <input type="text" id="title" placeholder="e.g., My Awesome Blog Post" required />
-                  <small>This will automatically generate the slug below</small>
-                </div>
-                
-                <div class="form-group">
-                  <label for="slug">
-                    <i class="fas fa-hashtag"></i> Slug (URL Path) *
-                  </label>
-                  <input type="text" id="slug" placeholder="Auto-generated from title" required />
-                  <small>Will be used as: seo360.xyz/slug</small>
+          <!-- Manage Redirects Section -->
+          <section id="manage-section" class="dashboard-section">
+            <div class="section-card">
+              <div class="section-header">
+                <h2 class="section-title">
+                  <i class="fas fa-list"></i> Manage Redirects
+                </h2>
+                <div class="section-actions">
+                  <button id="refresh-btn" class="btn btn-outline">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                  </button>
+                  <a href="/api/redirects.json" target="_blank" class="btn btn-outline">
+                    <i class="fas fa-code"></i> View JSON
+                  </a>
                 </div>
               </div>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="url">
-                    <i class="fas fa-external-link-alt"></i> Redirect URL *
-                  </label>
-                  <input type="url" id="url" placeholder="https://example.com" required />
-                </div>
-                
-                <div class="form-group">
-                  <label for="site_name">
-                    <i class="fas fa-globe"></i> Site Name
-                  </label>
-                  <input type="text" id="site_name" placeholder="Your Site Name" />
-                </div>
-              </div>
-
-              <div class="form-group form-row-full">
-                <label for="desc">
-                  <i class="fas fa-align-left"></i> Description
-                </label>
-                <textarea id="desc" placeholder="SEO description for better search visibility" rows="3"></textarea>
-              </div>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="image">
-                    <i class="fas fa-image"></i> Image URL
-                  </label>
-                  <input type="url" id="image" placeholder="https://example.com/image.jpg" />
-                </div>
-                
-                <div class="form-group">
-                  <label for="video">
-                    <i class="fas fa-video"></i> Video URL
-                  </label>
-                  <input type="url" id="video" placeholder="https://youtube.com/watch?v=..." />
-                </div>
-              </div>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="keywords">
-                    <i class="fas fa-tags"></i> Keywords
-                  </label>
-                  <input type="text" id="keywords" placeholder="keyword1, keyword2, keyword3" />
-                </div>
-                
-                <div class="form-group">
-                  <label for="type">
-                    <i class="fas fa-layer-group"></i> Content Type
-                  </label>
-                  <select id="type">
+              
+              <!-- Filters -->
+              <div class="filters-container mb-6">
+                <div class="flex flex-wrap gap-4 items-center">
+                  <div class="flex-1 min-w-64">
+                    <input 
+                      type="text" 
+                      id="search-filter" 
+                      placeholder="Search by title, slug, or URL..." 
+                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <select id="type-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Types</option>
                     <optgroup label="Primary Types">
-                      <option value="website">🌐 Website</option>
-                      <option value="article">📄 Article</option>
-                      <option value="video">🎥 Video</option>
-                      <option value="product">🛍️ Product</option>
+                      <option value="website">🌐 Websites</option>
+                      <option value="article">📄 Articles</option>
+                      <option value="video">🎥 Videos</option>
+                      <option value="product">🛍️ Products</option>
                     </optgroup>
                     <optgroup label="Extended Types">
-                      <option value="blog">📝 Blog</option>
+                      <option value="blog">📝 Blogs</option>
                       <option value="news">📰 News</option>
-                      <option value="service">🔧 Service</option>
-                      <option value="portfolio">💼 Portfolio</option>
-                      <option value="landing">🎯 Landing Page</option>
-                      <option value="course">🎓 Course</option>
-                      <option value="ebook">📚 eBook</option>
+                      <option value="service">🔧 Services</option>
+                      <option value="portfolio">💼 Portfolios</option>
+                      <option value="landing">🎯 Landing Pages</option>
+                      <option value="course">🎓 Courses</option>
+                      <option value="ebook">📚 eBooks</option>
                       <option value="music">🎵 Music</option>
-                      <option value="podcast">🎙️ Podcast</option>
-                      <option value="app">📱 App</option>
-                      <option value="tool">🛠️ Tool</option>
+                      <option value="podcast">🎙️ Podcasts</option>
+                      <option value="app">📱 Apps</option>
+                      <option value="tool">🛠️ Tools</option>
                       <option value="software">💻 Software</option>
-                      <option value="game">🎮 Game</option>
-                      <option value="event">📅 Event</option>
+                      <option value="game">🎮 Games</option>
+                      <option value="event">📅 Events</option>
                       <option value="business">🏢 Business</option>
-                      <option value="profile">👤 Profile</option>
-                      <option value="company">🏛️ Company</option>
-                      <option value="organization">🏢 Organization</option>
+                      <option value="profile">👤 Profiles</option>
+                      <option value="company">🏛️ Companies</option>
+                      <option value="organization">🏢 Organizations</option>
                     </optgroup>
                   </select>
+                  <select id="sort-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="title">Title A-Z</option>
+                    <option value="title-desc">Title Z-A</option>
+                  </select>
+                  <button id="clear-filters" class="btn btn-outline">
+                    <i class="fas fa-times"></i> Clear
+                  </button>
                 </div>
               </div>
+              
+              <div id="redirects-list" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div class="loading">
+                  <i class="fas fa-spinner fa-spin"></i> Loading redirects...
+                </div>
+              </div>
+            </div>
+          </section>
 
-              <button type="submit" class="btn btn-primary btn-large" style="width: 100%; margin-top: 1rem;">
-                <i class="fas fa-plus"></i> Create Redirect
-              </button>
-            </form>
-          </div>
-        </section>
-
-        <!-- Manage Redirects Section -->
-        <section id="manage-section" class="dashboard-section">
-          <div class="section-card">
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-list"></i> Manage Redirects
-              </h2>
-              <div class="section-actions">
-                <button id="refresh-btn" class="btn btn-outline">
+          <!-- Analytics Section -->
+          <section id="analytics-section" class="dashboard-section">
+            <div class="section-card">
+              <div class="section-header">
+                <h2 class="section-title">
+                  <i class="fas fa-chart-bar"></i> Analytics & Usage
+                </h2>
+                <button id="refresh-analytics" class="btn btn-outline">
                   <i class="fas fa-sync-alt"></i> Refresh
                 </button>
-                <a href="/api/redirects.json" target="_blank" class="btn btn-outline">
-                  <i class="fas fa-code"></i> View JSON
-                </a>
               </div>
-            </div>
-            
-            <!-- Filters -->
-            <div class="filters-container mb-6">
-              <div class="flex flex-wrap gap-4 items-center">
-                <div class="flex-1 min-w-64">
-                  <input 
-                    type="text" 
-                    id="search-filter" 
-                    placeholder="Search by title, slug, or URL..." 
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-blue-50 p-6 rounded-xl border border-blue-200">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-blue-600 text-sm font-medium">API Calls Today</p>
+                      <p class="text-2xl font-bold text-blue-900" id="api-calls-today">0</p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-lg">
+                      <i class="fas fa-chart-line text-blue-600"></i>
+                    </div>
+                  </div>
+                  <div class="mt-2">
+                    <span class="text-xs text-blue-600">Limit: 50,000/day</span>
+                  </div>
                 </div>
-                <select id="type-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                  <option value="">All Types</option>
-                  <optgroup label="Primary Types">
-                    <option value="website">🌐 Websites</option>
-                    <option value="article">📄 Articles</option>
-                    <option value="video">🎥 Videos</option>
-                    <option value="product">🛍️ Products</option>
-                  </optgroup>
-                  <optgroup label="Extended Types">
-                    <option value="blog">📝 Blogs</option>
-                    <option value="news">📰 News</option>
-                    <option value="service">🔧 Services</option>
-                    <option value="portfolio">💼 Portfolios</option>
-                    <option value="landing">🎯 Landing Pages</option>
-                    <option value="course">🎓 Courses</option>
-                    <option value="ebook">📚 eBooks</option>
-                    <option value="music">🎵 Music</option>
-                    <option value="podcast">🎙️ Podcasts</option>
-                    <option value="app">📱 Apps</option>
-                    <option value="tool">🛠️ Tools</option>
-                    <option value="software">💻 Software</option>
-                    <option value="game">🎮 Games</option>
-                    <option value="event">📅 Events</option>
-                    <option value="business">🏢 Business</option>
-                    <option value="profile">👤 Profiles</option>
-                    <option value="company">🏛️ Companies</option>
-                    <option value="organization">🏢 Organizations</option>
-                  </optgroup>
-                </select>
-                <select id="sort-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                  <option value="title">Title A-Z</option>
-                  <option value="title-desc">Title Z-A</option>
-                </select>
-                <button id="clear-filters" class="btn btn-outline">
-                  <i class="fas fa-times"></i> Clear
-                </button>
+                
+                <div class="bg-green-50 p-6 rounded-xl border border-green-200">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-green-600 text-sm font-medium">API Calls This Month</p>
+                      <p class="text-2xl font-bold text-green-900" id="api-calls-month">0</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-lg">
+                      <i class="fas fa-calendar text-green-600"></i>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="bg-purple-50 p-6 rounded-xl border border-purple-200">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-purple-600 text-sm font-medium">Total API Calls</p>
+                      <p class="text-2xl font-bold text-purple-900" id="api-calls-total">0</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-lg">
+                      <i class="fas fa-database text-purple-600"></i>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="bg-orange-50 p-6 rounded-xl border border-orange-200">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-orange-600 text-sm font-medium">Usage Percentage</p>
+                      <p class="text-2xl font-bold text-orange-900" id="usage-percentage">0%</p>
+                    </div>
+                    <div class="bg-orange-100 p-3 rounded-lg">
+                      <i class="fas fa-percentage text-orange-600"></i>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <div id="redirects-list" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              <div class="loading">
-                <i class="fas fa-spinner fa-spin"></i> Loading redirects...
-              </div>
-            </div>
-          </div>
-        </section>
 
-        <!-- Analytics Section -->
-        <section id="analytics-section" class="dashboard-section">
-          <div class="section-card">
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-chart-bar"></i> Analytics & Usage
-              </h2>
-              <button id="refresh-analytics" class="btn btn-outline">
-                <i class="fas fa-sync-alt"></i> Refresh
-              </button>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div class="bg-blue-50 p-6 rounded-xl border border-blue-200">
-                <div class="flex items-center justify-between">
+              <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <div class="flex items-start">
+                  <i class="fas fa-info-circle text-yellow-600 mt-1 mr-3"></i>
                   <div>
-                    <p class="text-blue-600 text-sm font-medium">API Calls Today</p>
-                    <p class="text-2xl font-bold text-blue-900" id="api-calls-today">0</p>
-                  </div>
-                  <div class="bg-blue-100 p-3 rounded-lg">
-                    <i class="fas fa-chart-line text-blue-600"></i>
-                  </div>
-                </div>
-                <div class="mt-2">
-                  <span class="text-xs text-blue-600">Limit: 50,000/day</span>
-                </div>
-              </div>
-              
-              <div class="bg-green-50 p-6 rounded-xl border border-green-200">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-green-600 text-sm font-medium">API Calls This Month</p>
-                    <p class="text-2xl font-bold text-green-900" id="api-calls-month">0</p>
-                  </div>
-                  <div class="bg-green-100 p-3 rounded-lg">
-                    <i class="fas fa-calendar text-green-600"></i>
+                    <h4 class="font-semibold text-yellow-800">Firebase Free Tier Limits</h4>
+                    <p class="text-yellow-700 text-sm mt-1">
+                      Firebase Firestore allows 50,000 document reads per day on the free tier. 
+                      Each API call to your api/redirects.json endpoint counts as one read per redirect document.
+                    </p>
                   </div>
                 </div>
               </div>
-              
-              <div class="bg-purple-50 p-6 rounded-xl border border-purple-200">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-purple-600 text-sm font-medium">Total API Calls</p>
-                    <p class="text-2xl font-bold text-purple-900" id="api-calls-total">0</p>
-                  </div>
-                  <div class="bg-purple-100 p-3 rounded-lg">
-                    <i class="fas fa-database text-purple-600"></i>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="bg-orange-50 p-6 rounded-xl border border-orange-200">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-orange-600 text-sm font-medium">Usage Percentage</p>
-                    <p class="text-2xl font-bold text-orange-900" id="usage-percentage">0%</p>
-                  </div>
-                  <div class="bg-orange-100 p-3 rounded-lg">
-                    <i class="fas fa-percentage text-orange-600"></i>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-              <div class="flex items-start">
-                <i class="fas fa-info-circle text-yellow-600 mt-1 mr-3"></i>
-                <div>
-                  <h4 class="font-semibold text-yellow-800">Firebase Free Tier Limits</h4>
-                  <p class="text-yellow-700 text-sm mt-1">
-                    Firebase Firestore allows 50,000 document reads per day on the free tier. 
-                    Each API call to your api/redirects.json endpoint counts as one read per redirect document.
+              <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <div class="flex items-start">
+                  <i class="fas fa-check-circle text-green-600 mt-1 mr-3"></i>
+                  <div>
+                    <h4 class="font-semibold text-green-800">Analytics Status</h4>
+                    <p class="text-green-700 text-sm mt-1">
+                      Analytics tracking is now properly configured and working! Each API call to /api/redirects.json 
+                      is tracked in real-time and stored in separate Firestore collections for daily, monthly, and total counts.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div id="analytics-chart" class="bg-white p-6 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4">Daily API Calls (Last 7 Days)</h3>
+                <div class="text-center text-gray-500 py-8">
+                  <i class="fas fa-chart-bar text-4xl mb-4"></i>
+                  <p>Analytics data will be displayed here</p>
+                  <p class="text-sm mt-2">Use the "Run Analytics Test" button in the Overview section to generate test data</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Documentation Section -->
+          <section id="docs-section" class="dashboard-section">
+            <div class="section-card">
+              <div class="section-header">
+                <h2 class="section-title">
+                  <i class="fas fa-book"></i> API Documentation
+                </h2>
+              </div>
+              
+              <div class="prose max-w-none">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+                  <h3 class="text-lg font-semibold text-blue-900 mb-3">
+                    <i class="fas fa-link"></i> Your API Endpoint
+                  </h3>
+                  <code class="bg-white px-4 py-2 rounded border text-sm block">
+                    https://seo-redirects.netlify.app/api/redirects.json
+                  </code>
+                  <p class="text-blue-700 text-sm mt-2">
+                    This is your live API endpoint for accessing redirect data.
                   </p>
                 </div>
-              </div>
-            </div>
 
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <div class="flex items-start">
-                <i class="fas fa-check-circle text-green-600 mt-1 mr-3"></i>
-                <div>
-                  <h4 class="font-semibold text-green-800">Analytics Status</h4>
-                  <p class="text-green-700 text-sm mt-1">
-                    Analytics tracking is now properly configured and working! Each API call to /api/redirects.json 
-                    is tracked in real-time and stored in separate Firestore collections for daily, monthly, and total counts.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div id="analytics-chart" class="bg-white p-6 rounded-lg border border-gray-200">
-              <h3 class="text-lg font-semibold mb-4">Daily API Calls (Last 7 Days)</h3>
-              <div class="text-center text-gray-500 py-8">
-                <i class="fas fa-chart-bar text-4xl mb-4"></i>
-                <p>Analytics data will be displayed here</p>
-                <p class="text-sm mt-2">Use the "Run Analytics Test" button in the Overview section to generate test data</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Documentation Section -->
-        <section id="docs-section" class="dashboard-section">
-          <div class="section-card">
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-book"></i> API Documentation
-              </h2>
-            </div>
-            
-            <div class="prose max-w-none">
-              <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-                <h3 class="text-lg font-semibold text-blue-900 mb-3">
-                  <i class="fas fa-link"></i> Your API Endpoint
-                </h3>
-                <code class="bg-white px-4 py-2 rounded border text-sm block">
-                  https://seo-redirects.netlify.app/api/redirects.json
-                </code>
-                <p class="text-blue-700 text-sm mt-2">
-                  This is your live API endpoint for accessing redirect data.
-                </p>
-              </div>
-
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- JavaScript/Browser -->
-                <div class="bg-white border border-gray-200 rounded-lg p-6">
-                  <h4 class="font-semibold text-gray-900 mb-4">
-                    <i class="fab fa-js-square text-yellow-500"></i> JavaScript (Browser)
-                  </h4>
-                  <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code>// Fetch all redirects
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <!-- JavaScript/Browser -->
+                  <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h4 class="font-semibold text-gray-900 mb-4">
+                      <i class="fab fa-js-square text-yellow-500"></i> JavaScript (Browser)
+                    </h4>
+                    <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code>// Fetch all redirects
 fetch('https://seo-redirects.netlify.app/api/redirects.json')
   .then(response => response.json())
   .then(data => {
@@ -505,14 +531,14 @@ fetch('https://seo-redirects.netlify.app/api/redirects.json')
       window.location.href = redirect.url;
     }
   });</code></pre>
-                </div>
+                  </div>
 
-                <!-- Node.js -->
-                <div class="bg-white border border-gray-200 rounded-lg p-6">
-                  <h4 class="font-semibold text-gray-900 mb-4">
-                    <i class="fab fa-node-js text-green-500"></i> Node.js
-                  </h4>
-                  <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code>const https = require('https');
+                  <!-- Node.js -->
+                  <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h4 class="font-semibold text-gray-900 mb-4">
+                      <i class="fab fa-node-js text-green-500"></i> Node.js
+                    </h4>
+                    <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code>const https = require('https');
 
 // Using built-in https module
 https.get('https://seo-redirects.netlify.app/api/redirects.json', (res) => {
@@ -528,14 +554,14 @@ https.get('https://seo-redirects.netlify.app/api/redirects.json', (res) => {
 const response = await fetch('https://seo-redirects.netlify.app/api/redirects.json');
 const redirects = await response.json();
 console.log('Redirects:', redirects);</code></pre>
-                </div>
+                  </div>
 
-                <!-- Next.js -->
-                <div class="bg-white border border-gray-200 rounded-lg p-6">
-                  <h4 class="font-semibold text-gray-900 mb-4">
-                    <i class="fas fa-react text-blue-500"></i> Next.js
-                  </h4>
-                  <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code>// pages/api/redirects.js
+                  <!-- Next.js -->
+                  <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h4 class="font-semibold text-gray-900 mb-4">
+                      <i class="fas fa-react text-blue-500"></i> Next.js
+                    </h4>
+                    <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code>// pages/api/redirects.js
 export default async function handler(req, res) {
   try {
     const response = await fetch('https://seo-redirects.netlify.app/api/redirects.json');
@@ -570,14 +596,15 @@ export default function RedirectPage({ slug }) {
     <div>Redirect not found</div>
   );
 }</code></pre>
-                </div>
+                  </div>
 
-                <!-- PHP -->
-                <div class="bg-white border border-gray-200 rounded-lg p-6">
-                  <h4 class="font-semibold text-gray-900 mb-4">
-                    <i class="fab fa-php text-purple-500"></i> PHP
-                  </h4>
-                  <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code>&lt;?php
+                  <!-- PHP -->
+<!-- PHP -->
+<div class="bg-white border border-gray-200 rounded-lg p-6">
+  <h4 class="font-semibold text-gray-900 mb-4">
+    <i class="fab fa-php text-purple-500"></i> PHP
+  </h4>
+  <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code>&lt;?php
 // Fetch all redirects
 $json = file_get_contents('https://seo-redirects.netlify.app/api/redirects.json');
 $redirects = json_decode($json, true);
@@ -593,14 +620,14 @@ if (isset($redirects[$slug])) {
   echo 'Redirect not found';
 }
 ?&gt;</code></pre>
-                </div>
+</div>
 
-                <!-- Python -->
-                <div class="bg-white border border-gray-200 rounded-lg p-6">
-                  <h4 class="font-semibold text-gray-900 mb-4">
-                    <i class="fab fa-python text-blue-600"></i> Python
-                  </h4>
-                  <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code>import requests
+                  <!-- Python -->
+                  <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h4 class="font-semibold text-gray-900 mb-4">
+                      <i class="fab fa-python text-blue-600"></i> Python
+                    </h4>
+                    <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code>import requests
 import json
 
 # Fetch all redirects
@@ -630,14 +657,14 @@ def handle_redirect(slug):
         return redirect(redirects[slug]['url'])
     else:
         return 'Redirect not found', 404</code></pre>
-                </div>
+                  </div>
 
-                <!-- cURL -->
-                <div class="bg-white border border-gray-200 rounded-lg p-6">
-                  <h4 class="font-semibold text-gray-900 mb-4">
-                    <i class="fas fa-terminal text-gray-700"></i> cURL
-                  </h4>
-                  <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code># Fetch all redirects
+                  <!-- cURL -->
+                  <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h4 class="font-semibold text-gray-900 mb-4">
+                      <i class="fas fa-terminal text-gray-700"></i> cURL
+                    </h4>
+                    <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code># Fetch all redirects
 curl -X GET "https://seo-redirects.netlify.app/api/redirects.json" \
      -H "Accept: application/json"
 
@@ -647,15 +674,15 @@ curl -s "https://seo-redirects.netlify.app/api/redirects.json" | jq '.'
 # Get specific redirect URL
 curl -s "https://seo-redirects.netlify.app/api/redirects.json" | \
   jq -r '.["my-post"].url'</code></pre>
+                  </div>
                 </div>
-              </div>
 
-              <div class="mt-8 bg-gray-50 border border-gray-200 rounded-lg p-6">
-                <h4 class="font-semibold text-gray-900 mb-4">
-                  <i class="fas fa-database"></i> Response Format
-                </h4>
-                <p class="text-gray-700 mb-4">The API returns a JSON object where each key is a slug and the value contains the redirect data:</p>
-                <pre class="bg-white p-4 rounded text-sm overflow-x-auto border"><code>{
+                <div class="mt-8 bg-gray-50 border border-gray-200 rounded-lg p-6">
+                  <h4 class="font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-database"></i> Response Format
+                  </h4>
+                  <p class="text-gray-700 mb-4">The API returns a JSON object where each key is a slug and the value contains the redirect data:</p>
+                  <pre class="bg-white p-4 rounded text-sm overflow-x-auto border"><code>{
   "my-awesome-post": {
     "title": "My Awesome Post",
     "desc": "This is an amazing post about...",
@@ -676,24 +703,25 @@ curl -s "https://seo-redirects.netlify.app/api/redirects.json" | \
     ...
   }
 }</code></pre>
-              </div>
+                </div>
 
-              <div class="mt-8 bg-red-50 border border-red-200 rounded-lg p-6">
-                <h4 class="font-semibold text-red-900 mb-4">
-                  <i class="fas fa-exclamation-triangle"></i> Important Notes
-                </h4>
-                <ul class="text-red-800 space-y-2">
-                  <li>• Each API call counts as one read per redirect in your Firebase quota</li>
-                  <li>• Firebase free tier allows 50,000 reads per day</li>
-                  <li>• Consider caching the response to reduce API calls</li>
-                  <li>• The endpoint is publicly accessible (no authentication required)</li>
-                  <li>• Analytics tracking is now working and will show real usage data</li>
-                </ul>
+                <div class="mt-8 bg-red-50 border border-red-200 rounded-lg p-6">
+                  <h4 class="font-semibold text-red-900 mb-4">
+                    <i class="fas fa-exclamation-triangle"></i> Important Notes
+                  </h4>
+                  <ul class="text-red-800 space-y-2">
+                    <li>• Each API call counts as one read per redirect in your Firebase quota</li>
+                    <li>• Firebase free tier allows 50,000 reads per day</li>
+                    <li>• Consider caching the response to reduce API calls</li>
+                    <li>• The endpoint is publicly accessible (no authentication required)</li>
+                    <li>• Analytics tracking is now working and will show real usage data</li>
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-      </main>
+          </section>
+        </main>
+      </div>
     </div>
 
     <!-- Edit Modal -->
