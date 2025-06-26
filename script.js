@@ -40,10 +40,8 @@ const authSection = document.getElementById('auth-section');
 const appSection = document.getElementById('app-section');
 const authForm = document.getElementById('auth-form');
 const signinBtn = document.getElementById('signin-btn');
-const signoutBtn = document.getElementById('signout-btn');
+const signoutBtn = document.getElementById('sidebar-signout-btn');
 const authError = document.getElementById('auth-error');
-const userEmail = document.getElementById('user-email');
-const userAvatar = document.getElementById('user-avatar');
 const redirectForm = document.getElementById('redirect-form');
 const editForm = document.getElementById('edit-form');
 const redirectsList = document.getElementById('redirects-list');
@@ -237,9 +235,11 @@ function initApp() {
   navTabs.forEach(tab => {
     tab.addEventListener('click', () => {
       const sectionId = tab.dataset.section;
-      switchSection(sectionId);
-      // Close mobile menu when a tab is clicked
-      closeMobileMenu();
+      if (sectionId) {
+        switchSection(sectionId);
+        // Close mobile menu when a tab is clicked
+        closeMobileMenu();
+      }
     });
   });
 
@@ -319,8 +319,6 @@ function showAuth() {
 function showApp(user) {
   authSection.style.display = 'none';
   appSection.style.display = 'block';
-  userEmail.textContent = user.email;
-  userAvatar.textContent = user.email.charAt(0).toUpperCase();
   updateStats();
 }
 

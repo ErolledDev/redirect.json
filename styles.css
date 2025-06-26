@@ -627,6 +627,24 @@ body {
   border-radius: 0 2px 2px 0;
 }
 
+/* Sign Out Button Styling */
+.nav-tab-signout {
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.5rem;
+  margin-top: 1rem;
+}
+
+.nav-tab-signout:hover {
+  color: var(--danger-color);
+  background: #fef2f2;
+  transform: translateX(4px);
+}
+
+.nav-tab-signout i {
+  color: var(--danger-color);
+}
+
 /* Main Content */
 .main-content {
   flex: 1;

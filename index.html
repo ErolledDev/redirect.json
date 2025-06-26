@@ -54,16 +54,7 @@
             <button id="mobile-menu-toggle" class="mobile-menu-toggle">
               <i class="fas fa-bars"></i>
             </button>
-            <h1><i class="fas fa-link"></i> Redirect Manager</h1>
-          </div>
-          <div class="header-actions">
-            <div class="user-info">
-              <div class="user-avatar" id="user-avatar">U</div>
-              <span id="user-email"></span>
-            </div>
-            <button id="signout-btn" class="btn btn-outline">
-              <i class="fas fa-sign-out-alt"></i> Sign Out
-            </button>
+            <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
           </div>
         </div>
       </header>
@@ -77,7 +68,7 @@
           <div class="sidebar-header">
             <div class="sidebar-logo">
               <i class="fas fa-link"></i>
-              <span>Dashboard</span>
+              <span>Redirect Manager</span>
             </div>
             <button id="sidebar-close" class="sidebar-close">
               <i class="fas fa-times"></i>
@@ -104,6 +95,10 @@
             <button class="nav-tab" data-section="docs">
               <i class="fas fa-book"></i>
               <span>Documentation</span>
+            </button>
+            <button id="sidebar-signout-btn" class="nav-tab nav-tab-signout">
+              <i class="fas fa-sign-out-alt"></i>
+              <span>Sign Out</span>
             </button>
           </div>
         </nav>
@@ -621,7 +616,6 @@ if (isset($redirects[$slug])) {
 }
 ?&gt;</code></pre>
 </div>
-
                   <!-- Python -->
                   <div class="bg-white border border-gray-200 rounded-lg p-6">
                     <h4 class="font-semibold text-gray-900 mb-4">
